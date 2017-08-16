@@ -8,5 +8,5 @@ Schema for leveldb supporting streaming from an index
     
 ## Usage example
 
-see [./fixtures/person.js] for schema implemenation
-see [./schema_test.js] for tests
+see [/fixtures/person.js](./fixtures/person.js) for schema implemenation
+see [/schema_test.js](./schema_test.js) for tests
