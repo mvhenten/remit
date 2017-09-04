@@ -31,4 +31,8 @@ class JSONStream extends Transform {
     }
 }
 
-module.exports = JSONStream;
+module.exports = function streamJSON(){
+    return new JSONStream();
+};
+
+module.exports.JSONStream = JSONStream;

@@ -1,6 +1,5 @@
 const { Writable } = require('stream');
 
-
 module.exports = function collectStream() {
     const writable = new Writable({
       objectMode: true,
@@ -13,4 +12,4 @@ module.exports = function collectStream() {
     writable.values = [];
 
     return writable;    
-}
+};
