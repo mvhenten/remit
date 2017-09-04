@@ -70,7 +70,7 @@ test("a model stores a secondary index", assert => {
 
     person.store(values, err => {
         assert.ok(!err, "no error");
-        let key = `bydate:${values.name}:${values.date.getTime().toString(36)}:${values.id}`;
+        let key = `bydate~${values.name}~${values.date.getTime().toString(36)}~${values.id}`;
 
         testDb.get(key, (err, result) => {
             assert.ok(!err, "no error");
@@ -159,7 +159,7 @@ test("it can return batch operations", assert => {
 
     let expect = [{
         type: 'put',
-        key: `person:${values.id}`,
+        key: `person~${values.id}`,
         value: {
             id: values.id,
             name: values.name,
@@ -168,11 +168,11 @@ test("it can return batch operations", assert => {
         }
     }, {
         type: 'put',
-        key: `bydate:Matt2:${values.date.getTime().toString(36)}:${values.id}`,
+        key: `bydate~Matt2~${values.date.getTime().toString(36)}~${values.id}`,
         value: values.id
     }, {
         type: "put",
-        key: `byage:36:${values.id}`,
+        key: `byage~36~${values.id}`,
         value: values.id
     }];
 
@@ -194,8 +194,8 @@ test("can stream all joes between a given date", assert => {
     });
 
     batch.create(99, err => {
-        let skey = `bydate:joe:${(start - 1).toString(36)}`;
-        let ekey = `bydate:joe:${end.toString(36)}`;
+        let skey = `bydate~joe~${(start - 1).toString(36)}`;
+        let ekey = `bydate~joe~${end.toString(36)}`;
 
         let count = 0;
 
@@ -249,4 +249,3 @@ test("can stream all henries", assert => {
     });
 });
 
-return;
