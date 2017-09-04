@@ -2,8 +2,6 @@
 
 const Schema = require("../schema");
 
-console.log(Schema);
-
 class Person extends Schema {
     get storage() {
         return {
