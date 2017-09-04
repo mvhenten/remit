@@ -19,7 +19,7 @@ test("It parse a formatter", (assert) => {
 
 test("It formats a parsed key", (assert) => {
     let fmt = Key.parse("pfx:$foo:$biz.bar");
-    let expect = ['pfx', 123, 456].join(":");
+    let expect = ['pfx', 123, 456].join("~");
 
     let result = Key.format(fmt, {
         foo: 123,
@@ -32,9 +32,11 @@ test("It formats a parsed key", (assert) => {
     assert.end();
 });
 
+
+
 test("It formats a string key", (assert) => {
     let fmt = "pfx:$foo:$biz.bar";
-    let expect = ['pfx', 123, 456].join(":");
+    let expect = ['pfx', 123, 456].join("~");
 
 
     let result = Key.format(fmt, {
@@ -50,7 +52,7 @@ test("It formats a string key", (assert) => {
 
 test("It formats a nested string key", (assert) => {
     let fmt = "pfx:$foo:$biz.bar.baz";
-    let expect = ['pfx', 123, 456].join(":");
+    let expect = ['pfx', 123, 456].join("~");
 
 
     let result = Key.format(fmt, {
@@ -67,18 +69,18 @@ test("It formats a nested string key", (assert) => {
 });
 
 test("It formats a double nested key", assert => {
-    let fmt = "pfx:$biz.bar:$biz.baz";
+    let fmt = "pfx:$biz.barnode:$biz.baz";
 
     let values = {
         biz: {
-            bar: 1,
+            barnode: 1,
             baz: 2
         }
     };
 
     let result = Key.format(fmt, values);
 
-    assert.equal(result, "pfx:1:2");
+    assert.equal(result, "pfx~1~2");
     assert.end();
 });
 
@@ -95,6 +97,6 @@ test("It formats deeper into the object", assert => {
 
     let result = Key.format(fmt, values);
 
-    assert.equal(result, "pfx:1:2");
+    assert.equal(result, "pfx~1~2");
     assert.end();
 });

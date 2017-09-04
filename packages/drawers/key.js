@@ -22,7 +22,7 @@ function format(ast, source) {
             return format(key.node, source[key.name]);
     });
 
-    return values.join(":");
+    return values.join("~");
 }
 
 module.exports.format = format;
@@ -56,7 +56,7 @@ function parse(fmt) {
     if (typeof fmt == "function")
         return fmt;
 
-    let keys = fmt.split(":");
+    let keys = fmt.split(/[~:]/);
 
     let parsedKeys = [];
 
