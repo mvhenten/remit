@@ -19,7 +19,7 @@ function coerce(schema, values) {
         let type = schema[key];
 
         if (izza.isa(Object, type) && type.coerce) {
-            value = type.coerce(value);
+            value = type.coerce(value, values);
             type = type.type;
         }
 
@@ -29,24 +29,26 @@ function coerce(schema, values) {
     return coercedValues;
 }
 
+function validateValue(schema, key, value) {
+    let type = schema[key];
+
+    if (izza.isa(Object, type) && type.type) {
+        type = type.type;
+    }
+
+    let err = izza.check(type, value);
+    if (err) err.message = `Validation failed for ${key}: ${err.message}`;
+    return err;
+}
 
 function validate(schema, values, done) {
     values = coerce(schema, values);
 
     for (let key in schema) {
-        let value = values[key];
-        let type = schema[key];
-
-        if (izza.isa(Object, type) && type.type) {
-            type = type.type;
-        }
-
-        let err = izza.check(type, value);
-        if (err) {
-            err.message = `Validation failed for ${key}: ${err.message}`;
-            if (done) return done(err);
-            throw err;
-        }
+        let err = validateValue(schema, key, values[key]);
+        
+        if (err && done) return done(err);
+        if (err) throw err;
     }
 
     if (done)
@@ -123,6 +125,14 @@ function generateGetters() {
         Object.defineProperty(this.constructor.prototype, key, {
             get: function() {
                 return this.values[key];
+            },
+            
+            set: function(value) {
+                let err = validateValue(schema, key, value);
+                
+                if (err) throw err;
+                
+                this.vaues[key] = value;
             }
         });
     });
@@ -149,6 +159,10 @@ class Schema {
 
         Object.freeze(this.constructor.prototype);
     }
+    
+    get db() {
+        return self.get(this).db;
+    }
 
     get values() {
         let {values} = self.get(this);
@@ -171,19 +185,23 @@ class Schema {
             let err = izza.check(Object, values);
 
             if (err) return done(err);
-
+            
             db.get(generateKey(index, values), (err, result) => {
                 if (err) return done(err);
                 if (!result) return done();
 
-                done(null, new this.constructor(db, result));
+                if (index.name == this.storage.index)
+                    return done(null, new this.constructor(db, result));
+
+                return done(null, result);
             });
         });
     }
 
-    streamByKey(keyName, query, next) {
+    streamByKey(keyName, query = {}) {
         let index = this.storage.indexes.find(index => index.name == keyName);
-        if (!index) return next(new Error("Invalid key name: " + keyName));
+        if (!index)
+            throw new Error("Invalid key name: " + keyName);
 
         let {db} = self.get(this);
         let parsedQuery = Object.assign({}, query);
@@ -193,7 +211,12 @@ class Schema {
                 return;
 
             let parsedKey = generateKey(index, query[key]);
-            parsedQuery[key] = parsedKey.replace(/::?$/, '');
+            parsedQuery[key] = parsedKey.replace(/~~?$/, '');
+        });
+        
+        ["keys", "values"].forEach(key => {
+            if (query[key] === false)
+                parsedQuery[key] = false;
         });
 
         parsedQuery.valueEncoding = "json";
@@ -236,7 +259,20 @@ class Schema {
         });
     }
 
-    update(values, done) {
+    update(...args) {
+        const parseArgs = args => {
+            if (args.length == 2) return args;
+            
+            let arg = args[0];
+            
+            if (typeof arg == "function")
+                return [this.values, arg];
+                
+            return [arg || this.values];
+        };
+
+        let [values, done] = parseArgs(args);
+
         return promise(done, done => {
             let {schema, indexes} = this.storage;
 
@@ -281,6 +317,10 @@ class Schema {
 
     toJSON() {
         return Object.assign({}, this.values);
+    }
+    
+    toObject() {
+        return this.toJSON();
     }
 }
 
