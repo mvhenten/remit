@@ -1,0 +1,26 @@
+{
+  "auth": {
+    "secret": "pWG4qyFl0WvWDq54sWy4FFCQyczpWjEWrErOaaGOeAoiCWDTiV"
+  },
+  "users": [
+    {
+      "name": "mvhenten",
+      "hash": "$2a$10$NtL9waHyUF8KD.ipR/Q6B.rlkndticjbSOleKdXAJLtWEkuvKrKYW",
+      "maildir": "/home/ubuntu/matthijs/Maildir",
+      "filters": [
+        {
+          "filter": "from:cron",
+          "target": ".cron"
+        },
+        {
+          "filter": "from:silke@ischen.nl",
+          "target": ".silke"
+        },
+        {
+          "filter": "to:silke@ischen.nl",
+          "target": ".silke.to"
+        }
+      ]
+    }
+  ]
+}
