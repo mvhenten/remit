@@ -6,6 +6,7 @@ const {promisify} = require('util');
 const fs = require("fs");
 
 const rename = promisify(fs.rename);
+const unlink = promisify(fs.unlink);
 const mkdirp = promisify(require("mkdirp"));
 
 const State = new WeakMap();
@@ -25,6 +26,12 @@ class MaildirMessage extends EventEmitter {
     
     get flags() {
         return Object.assign({}, State.get(this).flags);
+    }
+
+    set flags(flags) {
+        let origFlags = State.get(this).flags;
+        flags = Object.assign(origFlags, flags);
+        State.update(this, {flags});
     }
 
     get inbox() {
@@ -48,17 +55,33 @@ class MaildirMessage extends EventEmitter {
     get user() {
         return Object.assign({}, State.get(this).user);
     }
+    
+    get isValid() {
+        if (!this.headers)
+            throw new Error("Can't validate without headers");
+
+        return ["to", "messageId", "from"].every(key => {
+            return this.headers[key];
+        });
+    }
 
     continue() {
         this.emit("continue");
     }
     
     async move(inbox) {
+        if (inbox.charAt(0) != ".")
+            inbox = "." + inbox;
+        
         let target = Path.join(this.maildir, inbox, this.filename);
         
         await mkdirp(Path.dirname(target));
         
         return this.store(target);
+    }
+    
+    unlink() {
+        return unlink(this.path);
     }
     
     store(target=this.path) {
