@@ -3,21 +3,26 @@
 const Schema = require("drawers");
 const Types = require("izza/types");
 const uuidv5 = require('uuid/v5');
+const uuid = require("uuid");
 const { Transform } = require('stream');
+const ms = require("milliseconds");
 
 function createLoadMessageStream(self) {
     return new Transform({
         objectMode: true,
         async transform(chunk, encoding, next) {
             let messageId = chunk.value;
+            let key  = chunk.key;
             let value = await self.loadByMessageId({messageId});
 
-            next(null, { value });
+            next(null, { value, key });
         }
     });
 }
 
 const coerceMessageId = value => {
+    if (!value) value = uuid();
+    
     if (!/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/.test(value))
         value = uuidv5(value, uuidv5.DNS);
     return value;
@@ -37,9 +42,16 @@ const CoercedAddress = {
         if (typeof value == "object")
             value = value.text;
             
-        return value;
+        return value || "nobody";
     }
 };
+
+function DefaultValue(type, defaultValue) {
+    return {
+        type: type,
+        coerce: value => value || defaultValue
+    };
+}
 
 class Message extends Schema {
     get storage() {
@@ -54,7 +66,7 @@ class Message extends Schema {
                 inbox: String,
                 flags: Object,
                 from: CoercedAddress,
-                to: Array,
+                to: DefaultValue(Array, []),
                 date: CoercedDate,
                 references: {
                     type: Array,
@@ -92,7 +104,7 @@ class Message extends Schema {
                 value: values => values.messageId,
                 transform: self => createLoadMessageStream(self),
                 prepare: ({date, flags, inbox, messageId}) => ({
-                    unseen: flags.seen || false,
+                    unseen: flags.seen ? "seen" : "unseen",
                     sortDate: date.getTime().toString(36),
                     inbox,
                     messageId
@@ -110,6 +122,48 @@ class Message extends Schema {
                 })
             }]
         };
+    }
+    
+    streamFromParentIdAndDate(parentId, options={}) {
+        let {from=Date.now(), to=Date.now() - ms.days(100)} = options;
+
+        const query = {
+            reverse: true,
+            gte: { 
+                date: new Date(to),
+                parentId,
+            },
+            lte: {
+                date: new Date(from),
+                parentId,
+            },
+        };
+
+        return this.streamByParent(query);
+    }
+    
+    streamFromInboxAndDate(inbox, options={}) {
+        let {from=Date.now(), to=Date.now() - ms.days(10), seen=false} = options;
+        
+        let flags = {
+            seen
+        };
+        
+        const query = {
+            reverse: true,
+            gte: { 
+                date: new Date(to),
+                inbox,
+                flags
+            },
+            lte: {
+                date: new Date(from),
+                inbox,
+                flags
+            },
+        };
+        
+        return this.streamByDateAndInbox(query);
     }
 }
 
