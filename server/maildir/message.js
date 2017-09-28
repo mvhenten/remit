@@ -35,9 +35,23 @@ class MaildirMessage extends EventEmitter {
     }
 
     get inbox() {
-        const maildir = this.maildir;
-        const basedir = this.path.replace(new RegExp(`^${maildir}`), "");
-        return Path.dirname(basedir).replace(/^\//, "");
+        const dirname = Path.dirname(this.path);
+        const inbox = Path.basename(dirname);
+        
+        return inbox;
+    }
+    
+    set inbox(inbox) {
+        if (inbox.charAt(0) != ".")
+            inbox = "." + inbox;
+
+        const filename = Path.basename(this.path);
+        const dirname = Path.dirname(this.path);
+
+        const basename = Path.dirname(dirname);
+        const target = Path.join(basename, inbox, filename);
+        
+        State.update(this, {target});
     }
     
     get maildir() {
@@ -68,24 +82,19 @@ class MaildirMessage extends EventEmitter {
     continue() {
         this.emit("continue");
     }
-    
-    async move(inbox) {
-        if (inbox.charAt(0) != ".")
-            inbox = "." + inbox;
-        
-        let target = Path.join(this.maildir, inbox, this.filename);
-        
-        await mkdirp(Path.dirname(target));
-        
-        return this.store(target);
-    }
-    
+
     unlink() {
         return unlink(this.path);
     }
     
-    store(target=this.path) {
+    async store() {
         const source = this.path;
+        let target = State.get(this).target;
+        
+        if (!target) target = source;
+        
+        await mkdirp(Path.dirname(target));
+
 
         let path = Flags.format(target, this.flags);
         State.set(this, Object.assign(State.get(this), {path}));

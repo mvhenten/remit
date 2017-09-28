@@ -22,22 +22,15 @@ function index({maildir}) {
             debug(`Mesage deleted: ${message.subject}`);
         });
     });
-    
-    maildir.on("move", async (maildir, message) => {
-        const {path, inbox} = maildir;
-        const flags = message.flags;
-        
-        if (inbox == ".spam")
-            flags.spam = true;
-    
-        await message.update(Object.assign(message.toJSON(), {flags, path, inbox}));
-    });
 
     maildir.on("update", async (maildir, message) => {
         let {path, inbox, flags} = maildir;
         
         flags = Object.assign(message.flags, flags);
-        
+
+        if (inbox == ".spam")
+            flags.spam = true;
+
         await message.update(Object.assign(message.toJSON(), {flags, path, inbox}));
         
         debug("message updated: %s %s", message.messageId, JSON.stringify({flags, inbox, path}));

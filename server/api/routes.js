@@ -78,12 +78,32 @@ router.get("/api/message/:messageId", async ctx => {
     if (message) ctx.body = message;
 });
 
-router.post("/api/message/:messageId/seen", async ctx => {
-    const message = await ctx.db.Message.loadByMessageId(ctx.params);
+
+/**
+ *  PUT <id>/flags
+ *  POST <id>/reply  { to, body }
+ *  POST <id>/forward { to, body }
+ * 
+ *  POST / { to, cc, bcc, body }   # create new message, puts in .drafts
+ *  PUT <id> { to, cc, bcc, body } # cannot put if not in .drafts
+ *  PUT <id>/send                  # move from .drafts to .sent
+ *  
+ * 
+ */
+
+
+
+router.put("/api/message/:messageId",  bodyParser(), async ctx => {
+    const {messageId} = ctx.params;
+    const flags = ctx.request.body;
+    
+    for (let flag in flags) {
+        flags[flag] = (flags[flag] == "true");
+    }
+    
+    const message = await ctx.db.Message.loadByMessageId({messageId});
 
     if (!message) return;
-    
-    const flags = { seen: true };
 
     await Maildir.update(ctx.user, message, {flags});
     ctx.response.status = HTTP_STATUS_NO_CONTENT;
@@ -95,7 +115,7 @@ router.put("/api/message/:messageId/:inbox", async ctx => {
     
     if (!message) return;
 
-    await Maildir.move(ctx.user, message, inbox);
+    await Maildir.update(ctx.user, message, {inbox});
     ctx.response.status = HTTP_STATUS_NO_CONTENT;
 });
 

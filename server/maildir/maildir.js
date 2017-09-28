@@ -55,17 +55,15 @@ module.exports.unlink = async(user, message) => {
     instance.emit("unlink", maildir, message);
 };
 
-module.exports.move = async(user, message, target) => {
-    const maildir = new MaildirMessage(user, message.path);
-    await maildir.move(target);
-
-    instance.emit("move", maildir, message);
-};
-
-module.exports.update = async(user, message, {flags}) => {
+module.exports.update = async(user, message, {flags, inbox}) => {
     const maildir = new MaildirMessage(user, message.path);
     
-    maildir.flags = flags;
+    if (flags)
+        maildir.flags = flags;
+        
+    if (inbox)
+        maildir.inbox = inbox;
+
     await maildir.store();
 
     instance.emit("update", maildir, message);
