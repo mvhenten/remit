@@ -5,7 +5,6 @@ const config = require("config");
 
 const app = new Koa();
 const router = new Router();
-const Url = require("url");
 
 const { Transform } = require('stream');
 const Db = require("../db/db");
@@ -18,16 +17,25 @@ const streamJSON = require("drawers/util/json-stream");
 
 const bodyParser = require('koa-body');
 
-const HTTP_STATUS_NOT_FOUND = 404;
-const HTTP_STATUS_CONFLICT = 409;
-const HTTP_STATUS_CREATED = 201;
-const HTTP_STATUS_NO_CONTENT = 204;
+const {
+    HTTP_STATUS_NOT_FOUND,
+    HTTP_STATUS_CONFLICT,
+    HTTP_STATUS_CREATED,
+    HTTP_STATUS_NO_CONTENT,
+} = require("./lib/http-constant");
+
+const {NotFound} = require("./lib/http-not-found");
+
+
+const {pluck, build, mixin, limit} = require("./stream/util");
+
 
 app.use(async (ctx, next) => {
     ctx.append("Access-Control-Allow-Origin", "*");
     ctx.append("Content-Type", "application/json");
     await next();
 });
+
 
 
 app.use(async (ctx, next) => {
@@ -59,38 +67,40 @@ app.use(async (ctx, next) => {
     await next(); 
 });
 
+
+
 const maildir = require("../maildir/dir");
 
 router.get("/api/maildir", async ctx => {
     ctx.body = await maildir.folders(ctx.user);
 });
 
-router.get("/api/maildir/:inbox", async ctx => {
-   ctx.body = ctx.db.Message.streamFromInboxAndDate(ctx.params.inbox, ctx.query).pipe(streamJSON());
-});
-
-router.get("/api/thread/:parentId", async ctx => {
-   ctx.body = ctx.db.Message.streamFromParentIdAndDate(ctx.params.parentId).pipe(streamJSON());
-});
-
 router.get("/api/message/:messageId", async ctx => {
     const message = await ctx.db.Message.loadByMessageId(ctx.params);
-    if (message) ctx.body = message;
+    
+    if (!message)
+        return NotFound(ctx);
+    
+    const folders = await maildir.folders(ctx.user);
+    const folder = folders.find(({folder}) => message.inbox == folder);
+    const messageSource = new MaildirMessage(ctx.user, message.path);
+    const {body} = await messageSource.parseMessage();
+
+    ctx.body = Object.assign(message.toJSON(), {folder, body});
 });
 
+router.post("/api/message/:messageId/seen", async ctx => {
+    const message = await ctx.db.Message.loadByMessageId(ctx.params);
 
-/**
- *  PUT <id>/flags
- *  POST <id>/reply  { to, body }
- *  POST <id>/forward { to, body }
- * 
- *  POST / { to, cc, bcc, body }   # create new message, puts in .drafts
- *  PUT <id> { to, cc, bcc, body } # cannot put if not in .drafts
- *  PUT <id>/send                  # move from .drafts to .sent
- *  
- * 
- */
+    if (!message)
+        return NotFound(ctx);
 
+    const flags = {};
+    flags.seen = true;
+
+    await Maildir.update(ctx.user, message, {flags});
+    ctx.response.status = HTTP_STATUS_NO_CONTENT;
+});
 
 
 router.put("/api/message/:messageId",  bodyParser(), async ctx => {
@@ -128,7 +138,9 @@ router.delete("/api/message/:messageId", async ctx => {
     ctx.response.status = HTTP_STATUS_NO_CONTENT;
 });
 
+
 app
+  .use(require("./route/thread").routes())
   .use(router.routes())
   .use(router.allowedMethods())
   .listen(8082, () => {
