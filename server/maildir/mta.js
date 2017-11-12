@@ -6,6 +6,7 @@ const getTarget = async message => {
         return ".spam";
 
     await message.parseHeaders();
+    
     const match = filter.match(message.user, message);
 
     if (match) return match.target;
@@ -13,11 +14,15 @@ const getTarget = async message => {
 };
 
 module.exports = async function mta({maildir}) {
-    maildir.on("received", async message => {
+    maildir.on("file", async message => {
         const target = await getTarget(message);
-        await message.move(target);
+        
+        message.inbox = target;
+        
+        // await message.move(target);
+        await message.store();
 
-        debug("delivered to: ", target);
+        debug("delivered to: ", message.path);
         maildir.emit("delivered", message);
     });
     

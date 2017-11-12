@@ -4,6 +4,7 @@ const {promisify} = require("util");
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
 const Flags = require("./flags");
+const uuid = require("uuid/v5");
 
 
 const folders = async base => {
@@ -29,6 +30,7 @@ const count = async folder => {
     const count = info.filter(flags => !flags.seen);
     
     return {
+        id: uuid(folder, uuid.URL),
         folder: path.basename(folder),
         unseen: count.length,
         total: info.length

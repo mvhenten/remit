@@ -12,7 +12,7 @@ const access = promisify(fs.access);
 
 test("it parses headers", async assert => {
     const filename = `/tmp/tmp-${Math.random()}.eml`;
-    const email = await composeEmail();
+    const [email] = await composeEmail();
 
     fs.writeFileSync(filename, email);
 
@@ -28,7 +28,7 @@ test("it creates a new message", async assert => {
     const fakeMaildir = `/tmp/${Math.random()}/`;
     const fakeInbox = "important";
     const filename = `${fakeMaildir}${fakeInbox}/tmp-${Math.random()}.eml:2,S`;
-    const email = await composeEmail();
+    const [email] = await composeEmail();
     const fakeUser = { maildir: fakeMaildir };
 
     await mkdirp(fakeMaildir + fakeInbox);
@@ -53,7 +53,7 @@ test("it updates inbox", async assert => {
     const fakeMaildir = `/tmp/${Math.random()}/`;
     const fakeInbox = "important";
     const filename = `${fakeMaildir}${fakeInbox}/tmp-${Math.random()}.eml:2,S`;
-    const email = await composeEmail();
+    const [email] = await composeEmail();
     const fakeUser = { maildir: fakeMaildir };
 
     await mkdirp(fakeMaildir + fakeInbox);
@@ -78,7 +78,7 @@ test("it updates inbox", async assert => {
 test("it creates new message", async assert => {
     // const fakeInbox = "important";
     // const filename = `${fakeMaildir}${fakeInbox}/tmp-${Math.random()}.eml:2,S`;
-    // const email = await composeEmail();
+    // const [email] = await composeEmail();
     const fakeMaildir = `/tmp/${Math.random()}/`;
     const fakeUser = { maildir: fakeMaildir };
 
@@ -87,7 +87,17 @@ test("it creates new message", async assert => {
 
     // const message = new Message(fakeUser, filename);
     
-    console.log(Message.compose);
+    // console.log(Message.compose);
+    
+    const message = await Message.compose(fakeUser, {});
+    
+    await message.parseHeaders();
+    
+    console.log(message.headers);
+    
+    console.log(message.path);
+    
+    
     
 
     // assert.equal(message.inbox, fakeInbox, "got expected inbox");

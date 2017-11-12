@@ -19,13 +19,13 @@ function composeEmail() {
         to: `${faker.internet.email()}, ${faker.internet.email()}`,
         subject: faker.company.catchPhrase(),
         text: faker.lorem.paragraphs(10),
-        date: dt
+        date: dt,
     };
     
     return new Promise((resolve, reject) => {
         new MailComposer(mailOptions).compile().build(function(err, msg){
             if (err) return reject(err);
-            resolve(msg);
+            resolve([msg, mailOptions]);
         });
     });
 }

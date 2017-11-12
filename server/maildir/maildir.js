@@ -2,18 +2,45 @@ const EventEmitter = require("events");
 const config = require("config");
 const fs = require("fs");
 const debug = require("debug")("remit:maildir");
+const argv = require('yargs').argv;
+const promisify = require("util").promisify;
+const readdir = promisify(fs.readdir);
+
 
 const isDir = (path) =>
     fs.statSync(path).isDirectory();
+    
+console.log(argv, argv.index);
 
 const MaildirMessage = require("./message");
 
 class Maildir extends EventEmitter {
+    getDir(user) {
+        return user.maildir + "/new";
+    }
+    
+    async index(user) {
+        const dir = this.getDir(user);
+        
+        debug(`Indexing ${dir}`);
+        
+        const files = await readdir(dir);
+        
+        files.forEach(filename => {
+            const path = `${dir}/${filename}`;
+
+            debug(`Found new message ${path}`);
+
+            const messageState = new MaildirMessage(user, path);
+
+            this.emit("file", messageState);
+        });
+    }
+    
     watch(user) {
-        const dir = user.maildir + "/new";
+        const dir = this.getDir(user);
 
         debug(`Watching maildir: ${dir}`);
-
 
         fs.watch(dir, (eventType, filename) => {
             if (eventType !== "rename")
@@ -74,6 +101,9 @@ function init() {
 
     config.users.forEach((user) => {
         instance.watch(user);
+        
+        if (argv.index)
+            instance.index(user);
     });
 
     return instance;
