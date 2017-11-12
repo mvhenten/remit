@@ -6,6 +6,13 @@ const uuidv5 = require('uuid/v5');
 const uuid = require("uuid");
 const { Transform } = require('stream');
 const ms = require("milliseconds");
+const threadStream = require("./transform/thread");
+
+function createSortDate(dt) {
+    if (!dt) return;
+    let key = dt.getTime().toString(36);
+    return ( "000000" + key).slice(-14);
+}
 
 function createLoadMessageStream(self) {
     return new Transform({
@@ -14,7 +21,7 @@ function createLoadMessageStream(self) {
             let messageId = chunk.value;
             let key  = chunk.key;
             let value = await self.loadByMessageId({messageId});
-
+            
             next(null, { value, key });
         }
     });
@@ -100,12 +107,11 @@ class Message extends Schema {
                 value: (values) => values
             }, {
                 name: "byDateAndInbox",
-                key: "inboxdate:$sortDate:$inbox:$unseen:$messageId",
+                key: "inboxdate:$inbox:$sortDate:$messageId",
                 value: values => values.messageId,
                 transform: self => createLoadMessageStream(self),
-                prepare: ({date, flags, inbox, messageId}) => ({
-                    unseen: flags.seen ? "seen" : "unseen",
-                    sortDate: date.getTime().toString(36),
+                prepare: ({date, inbox, messageId}) => ({
+                    sortDate: createSortDate(date),
                     inbox,
                     messageId
                 })
@@ -118,51 +124,67 @@ class Message extends Schema {
                 prepare: ({parentId, date, messageId}) => ({
                     parentId,
                     messageId,
-                    sortDate: date.getTime().toString(36)
+                    sortDate: createSortDate(date)
                 })
             }]
         };
     }
+
+    loadThread() {
+        let parentId = this.parentId || this.MessageId;
+
+        let query = {
+            gte: {
+                parentId
+            },
+            lte: {
+                parentId,
+                MessageId: "zzz"
+            },
+        };
+
+        return this.streamByParent(query);
+    }
+
     
     streamFromParentIdAndDate(parentId, options={}) {
-        let {from=Date.now(), to=Date.now() - ms.days(100)} = options;
+        let {end=Date.now() + ms.days(1), start=Date.now() - ms.days(100)} = options;
 
         const query = {
-            reverse: true,
+            reverse: false,
             gte: { 
-                date: new Date(to),
+                date: new Date(start),
                 parentId,
             },
             lte: {
-                date: new Date(from),
+                date: new Date(end + 100),
                 parentId,
             },
         };
 
         return this.streamByParent(query);
     }
+
+    streamByThread(inbox, options) {
+        return this.streamFromInboxAndDate(inbox, options).pipe(threadStream(this, options));
+    }
     
     streamFromInboxAndDate(inbox, options={}) {
-        let {from=Date.now(), to=Date.now() - ms.days(10), seen=false} = options;
-        
-        let flags = {
-            seen
-        };
-        
+        let {end=Date.now(), start=Date.now() - ms.days(100), keys=true} = options;
+
         const query = {
             reverse: true,
+            keys,
             gte: { 
-                date: new Date(to),
+                date: new Date(start),
                 inbox,
-                flags
             },
             lte: {
-                date: new Date(from),
-                inbox,
-                flags
+                date: new Date(end),
+                inbox: inbox,
             },
         };
-        
+
         return this.streamByDateAndInbox(query);
     }
 }

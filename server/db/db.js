@@ -6,7 +6,7 @@ const Message = require("./message");
 
 function load(user){
     if (!cache.has(user.name)) {
-        const store = db(user.name);
+        const store = db(user.name, __dirname + "/../");
         store.Message = new Message(store);
 
         cache.set(user.name, store);
