@@ -1,0 +1,41 @@
+{
+  "private": true,
+  "name": "remit-client",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start": "if-env NODE_ENV=production && npm run -s serve || npm run -s dev",
+    "build": "preact build",
+    "serve": "preact build && preact serve",
+    "dev": "preact watch",
+    "lint": "eslint src"
+  },
+  "eslintConfig": {
+    "extends": "eslint-config-synacor"
+  },
+  "eslintIgnore": [
+    "build/*"
+  ],
+  "devDependencies": {
+    "eslint": "^4.5.0",
+    "eslint-config-synacor": "^1.1.0",
+    "fabric": "mvhenten/fabric#996c0f6bbdc787978b2379a968a5693a1dd764ab",
+    "font-awesome": "^4.7.0",
+    "if-env": "^1.0.0",
+    "jsonwebtoken": "^8.1.0",
+    "jwt-decode": "^2.2.0",
+    "preact-cli": "^1.4.1",
+    "tape": "^4.8.0"
+  },
+  "dependencies": {
+    "date-fns": "^1.29.0",
+    "fetch-readablestream": "^0.1.0",
+    "kabinet": "^0.3.0",
+    "keyboardjs": "^2.4.1",
+    "koa-compose": "^4.0.0",
+    "path-to-regexp": "^2.1.0",
+    "preact": "^8.2.1",
+    "preact-compat": "^3.17.0",
+    "preact-router": "^2.5.5"
+  }
+}
