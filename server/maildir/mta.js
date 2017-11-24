@@ -10,6 +10,7 @@ const getTarget = async message => {
     const match = filter.match(message.user, message);
 
     if (match) return match.target;
+
     return "cur";
 };
 
@@ -19,7 +20,6 @@ module.exports = async function mta({maildir}) {
         
         message.inbox = target;
         
-        // await message.move(target);
         await message.store();
 
         debug("delivered to: ", message.path);

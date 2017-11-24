@@ -12,13 +12,17 @@ function threadStream(msg, query) {
     }
 
     function byDate(a, b) {
-        return a.date - b.date;
+        return b.date - a.date;
     }
 
     return new Transform({
         objectMode: true,
         async transform(chunk, encoding, next) {
             const message = chunk.value;
+            
+            if (!message) {
+                return next(null);
+            }
 
             if (seen.has(message.messageId))
                 return next();
@@ -26,9 +30,8 @@ function threadStream(msg, query) {
             if (seen.has(message.parentId))
                 return next();
 
-            const threadStream = message.streamFromParentIdAndDate(message.parentId, {keys: false});
-            let messages = await pullStream(threadStream);
-            messages = messages.map(({value}) => value);
+            const threadStream = message.streamFromParentIdAndDate(message.parentId);
+            let messages = (await pullStream(threadStream)).map(({value}) => value);
 
             /**
              * In case we are paginating, check if this thread

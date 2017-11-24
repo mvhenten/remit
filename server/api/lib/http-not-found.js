@@ -1,6 +1,6 @@
-const NotFound = (ctx) => {
+const NotFound = (ctx, message) => {
     ctx.status = 404;
-    ctx.body = { error: "Not Found" };
+    ctx.body = { error: message || "Not Found" };
 };
 
 module.exports = { NotFound };

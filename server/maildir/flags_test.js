@@ -29,6 +29,16 @@ test("parse", assert => {
             }
         },
         {
+            label: "1506339289.M578689P3578.vps801.directvps.nl,S=1797350,W=1820721:2,S",
+            filename: "/path/to/1506339289.M578689P3578.vps801.directvps.nl,S=1797350,W=1820721:2,S",
+            expect: {
+                basename: "/path/to/1506339289.M578689P3578.vps801.directvps.nl,S=1797350,W=1820721",
+                flags: {
+                    seen: true
+                }
+            }
+        },
+        {
             label: "parse with no flag",
             filename: "/path/to/maildir/new/foo.bar.test,S=8238,W=8329",
             expect: {

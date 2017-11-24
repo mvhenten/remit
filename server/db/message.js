@@ -4,9 +4,11 @@ const Schema = require("drawers");
 const Types = require("izza/types");
 const uuidv5 = require('uuid/v5');
 const uuid = require("uuid");
+const {pullStream} = require("./util/stream");
 const { Transform } = require('stream');
 const ms = require("milliseconds");
 const threadStream = require("./transform/thread");
+const {CoercedAddress, CoercedDate, CoercedMessageId, DefaultValue} = require("./util/coerce");
 
 function createSortDate(dt) {
     if (!dt) return;
@@ -25,39 +27,6 @@ function createLoadMessageStream(self) {
             next(null, { value, key });
         }
     });
-}
-
-const coerceMessageId = value => {
-    if (!value) value = uuid();
-    
-    if (!/^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}$/.test(value))
-        value = uuidv5(value, uuidv5.DNS);
-    return value;
-};
-
-const CoercedDate = {
-    type: Date,
-    coerce: value => {
-        return new Date(value);
-    }
-};
-
-
-const CoercedAddress = {
-    type: String,
-    coerce: value => {
-        if (typeof value == "object")
-            value = value.text;
-            
-        return value || "nobody";
-    }
-};
-
-function DefaultValue(type, defaultValue) {
-    return {
-        type: type,
-        coerce: value => value || defaultValue
-    };
 }
 
 class Message extends Schema {
@@ -91,14 +60,11 @@ class Message extends Schema {
                         
                         if (values.references)
                             value = typeof values.references == "string" ? values.references : values.references[0];
-                            
+
                         return uuidv5(value || values.messageId, uuidv5.DNS);
                     }
                 },
-                messageId: {
-                    type: String,
-                    coerce: coerceMessageId,
-                },
+                messageId: CoercedMessageId,
             },
 
             indexes: [{
@@ -129,35 +95,22 @@ class Message extends Schema {
             }]
         };
     }
-
-    loadThread() {
-        let parentId = this.parentId || this.MessageId;
-
-        let query = {
-            gte: {
-                parentId
-            },
-            lte: {
-                parentId,
-                MessageId: "zzz"
-            },
-        };
-
-        return this.streamByParent(query);
+    
+    loadMessagesByParentId(parentId) {
+        return pullStream(this.streamFromParentIdAndDate(parentId));
     }
 
-    
     streamFromParentIdAndDate(parentId, options={}) {
-        let {end=Date.now() + ms.days(1), start=Date.now() - ms.days(100)} = options;
+        let {end=Date.now() + ms.days(1), start=Date.now() - ms.days(365)} = options;
 
         const query = {
-            reverse: false,
+            reverse: true,
             gte: { 
                 date: new Date(start),
                 parentId,
             },
             lte: {
-                date: new Date(end + 100),
+                date: new Date(end + ms.days(1)),
                 parentId,
             },
         };
@@ -170,7 +123,7 @@ class Message extends Schema {
     }
     
     streamFromInboxAndDate(inbox, options={}) {
-        let {end=Date.now(), start=Date.now() - ms.days(100), keys=true} = options;
+        let {end=Date.now(), start=Date.now() - ms.days(365), keys=true} = options;
 
         const query = {
             reverse: true,
@@ -188,7 +141,5 @@ class Message extends Schema {
         return this.streamByDateAndInbox(query);
     }
 }
-
-Message.coerceMessageId = coerceMessageId;
 
 module.exports = Message;

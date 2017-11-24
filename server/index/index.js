@@ -1,20 +1,21 @@
-
 const Db = require("../db/db");
 const debug = require("debug")("remit:index");
 
 function index({maildir}) {
-
-    maildir.on("delivered", async message => {
-        await message.parseHeaders();
-        
-        const {headers, flags, inbox, user, path} = message;
-        
+    maildir.on("delivered", async maildirMessage => {
+        await maildirMessage.parseHeaders();
+        const {headers, flags, inbox, user, path} = maildirMessage;
         const db = Db.load(user);
         const data = Object.assign({}, {flags, inbox, path}, headers);
-        const msg = await db.Message.store(data);
-        
-        debug("indexed: %s %s", msg.from, msg.subject);
-        maildir.emit("indexed", msg);
+
+        try {
+            let msg = await db.Message.store(data);
+            maildir.emit("indexed", msg);
+        }
+        catch(err) {
+            console.error(err);
+            maildirMessage.unlink();
+        }
     });
     
     maildir.on("unlink", async (maildir, message) => {
