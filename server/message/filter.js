@@ -2,22 +2,22 @@ const {parse} = require("email-filter");
 
 function matchCheck(value, check) {
     let accept = new RegExp(check);
-    
+
     if (Array.isArray(value))
         return value.some(val => accept.test(val.text));
-    
-    return accept.test(value);    
+
+    return accept.test(value);
 }
 
 function matchValue(value, check) {
     if (!value) return false;
-    
+
     if (check.value)
         return matchCheck(value, check.value);
-        
+
     if (check.reject && matchCheck(value, check.reject))
         return false;
-        
+
     if (check.accept)
         return matchCheck(value, check.accept);
 
@@ -41,11 +41,11 @@ function matchFilter({filter}, headers) {
 }
 
 
-module.exports.match = function match(user, message) {
-    let filters = user.filters.map(({ filter, target }) => ({
+module.exports.match = function match(filters, message) {
+    let normalized = filters.map(({ filter, target }) => ({
         filter: parse(filter),
         target
     }));
 
-    return filters.find(filter => matchFilter(filter, message.headers));
+    return normalized.find(filter => matchFilter(filter, message.headers));
 };

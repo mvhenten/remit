@@ -1,6 +1,6 @@
 "use strict";
 
-const fs = require("fs");
+const fs = require("graceful-fs");
 const MailParser = require("mailparser").MailParser;
 
 const promisfy = require("util").promisify;
@@ -75,11 +75,11 @@ function processHeaders(headers) {
 
 }
 
-function parseHeaders(email) {
+async function parseHeaders(email) {
     let parser = new MailParser();
 
     if (typeof email == "string")
-        email = fs.readFileSync(email);
+        email = await readFile(email);
 
     return new Promise((resolve, reject) => {
         parser.on("headers", headers => {
@@ -88,10 +88,11 @@ function parseHeaders(email) {
             const parsedHeaders = processHeaders(headers);
 
             resolve(parsedHeaders);
+
         });
 
-        parser.end(email);
-    });
+        parser.end(email)
+     });
 }
 
 module.exports.parseHeaders = parseHeaders;

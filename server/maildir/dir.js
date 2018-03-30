@@ -1,10 +1,10 @@
-const fs = require("fs");
+const fs = require("graceful-fs");
 const path = require("path");
 const { promisify } = require("util");
 const exists = fs.existsSync;
 const readdir = promisify(fs.readdir);
 const stat = promisify(fs.stat);
-const Flags = require("./flags");
+const Flags = require("maildir-flags");
 const uuid = require("uuid/v5");
 
 const count = async folder => {

@@ -23,7 +23,7 @@ function createLoadMessageStream(self) {
             let messageId = chunk.value;
             let key  = chunk.key;
             let value = await self.loadByMessageId({messageId});
-            
+
             next(null, { value, key });
         }
     });
@@ -49,7 +49,7 @@ class Message extends Schema {
                     coerce(value) {
                         if (!Array.isArray(value))
                             value = [value];
-                            
+
                         return value;
                     }
                 },
@@ -57,7 +57,7 @@ class Message extends Schema {
                     type: String,
                     coerce(value, values) {
                         if (value) return value;
-                        
+
                         if (values.references)
                             value = typeof values.references == "string" ? values.references : values.references[0];
 
@@ -81,7 +81,7 @@ class Message extends Schema {
                     inbox,
                     messageId
                 })
-                
+
             }, {
                 name: "byParent",
                 key: "parent:$parentId:$sortDate:$messageId",
@@ -95,7 +95,12 @@ class Message extends Schema {
             }]
         };
     }
-    
+
+    loadByRawMessageId(rawMessageId) {
+        let messageId = CoercedMessageId.coerce(rawMessageId);
+        return this.loadByMessageId({messageId});
+    }
+
     loadMessagesByParentId(parentId) {
         return pullStream(this.streamFromParentIdAndDate(parentId));
     }
@@ -105,7 +110,7 @@ class Message extends Schema {
 
         const query = {
             reverse: true,
-            gte: { 
+            gte: {
                 date: new Date(start),
                 parentId,
             },
@@ -121,14 +126,14 @@ class Message extends Schema {
     streamByThread(inbox, options) {
         return this.streamFromInboxAndDate(inbox, options).pipe(threadStream(this, options));
     }
-    
+
     streamFromInboxAndDate(inbox, options={}) {
         let {end=Date.now(), start=Date.now() - ms.days(365), keys=true} = options;
 
         const query = {
             reverse: true,
             keys,
-            gte: { 
+            gte: {
                 date: new Date(start),
                 inbox,
             },

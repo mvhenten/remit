@@ -2,7 +2,7 @@ const Router = require("koa-router");
 const router = new Router();
 
 const { Transform } = require('stream');
-const MaildirMessage = require("../../maildir/message");
+const MaildirMessage = require("../../message/message");
 const Maildir = require("../../maildir/maildir");
 const maildir = require("../../maildir/dir");
 
@@ -23,7 +23,7 @@ router.get("/api/threads/:id", async ctx => {
 
     const folders = await maildir.counts(ctx.user);
     const folder = folders.find(folder => folder.id == id);
-    
+
     console.log("WFT?");
 
     if (!folder) return NotFound(ctx);
@@ -58,7 +58,7 @@ router.get("/api/thread/:id", async ctx => {
 
 router.delete("/api/thread/:id", async ctx => {
     const messages = await ctx.db.Message.loadMessagesByParentId(ctx.params.id);
-    
+
     for (let message of messages) {
         try {
             await Maildir.unlink(ctx.user, message.value);
@@ -67,7 +67,7 @@ router.delete("/api/thread/:id", async ctx => {
             console.log(err);
         }
     }
-    
+
     ctx.response.status = HTTP_STATUS_NO_CONTENT;
 });
 

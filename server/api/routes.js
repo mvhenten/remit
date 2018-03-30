@@ -7,7 +7,7 @@ const app = new Koa();
 const router = new Router();
 
 const Db = require("../db/db");
-const MaildirMessage = require("../maildir/message");
+const MaildirMessage = require("../message/message");
 const Maildir = require("../maildir/maildir");
 const debug = require("debug")("remit:api");
 const jwt = require('koa-jwt');

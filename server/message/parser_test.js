@@ -35,8 +35,7 @@ test("parse headers and body from file", async assert => {
     const {headers, body, attachments} = await parseMessage(filename);
 
     assert.equal(body.text.trim(), options.text.trim());
-    assert.ok(!body.html);
-    
+
     const keys = [
         "contentType",
         "from",
@@ -53,4 +52,16 @@ test("parse headers and body from file", async assert => {
     assert.deepEqual(attachments, []);
 
     assert.end();
+});
+
+test("parse headers from file, catch errors", async assert => {
+    const filename = "/tmp/tmp.eml";
+    await writeFile(filename, "sadfwsdfsdfsfsfs\nsadfsfs\nsfsdfds");
+    const headers = await parseHeaders(filename);
+
+    // assert.end();
+
+    console.log(headers);
+
+    setTimeout(assert.end, 1000);
 });

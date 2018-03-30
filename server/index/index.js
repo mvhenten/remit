@@ -1,43 +1,32 @@
-const Db = require("../db/db");
 const debug = require("debug")("remit:index");
 
-function index({maildir}) {
-    maildir.on("delivered", async maildirMessage => {
-        await maildirMessage.parseHeaders();
-        const {headers, flags, inbox, user, path} = maildirMessage;
-        const db = Db.load(user);
-        const data = Object.assign({}, {flags, inbox, path}, headers);
+class Indexer {
+    constructor(db) {
+        this.db = db;
+    }
 
-        try {
-            let msg = await db.Message.store(data);
-            maildir.emit("indexed", msg);
-        }
-        catch(err) {
-            console.error(err);
-            maildirMessage.unlink();
-        }
-    });
-    
-    maildir.on("unlink", async (maildir, message) => {
-        await message.delete(() => {
-            debug(`Mesage deleted: ${message.subject}`);
-        });
-    });
+    async index(message) {
+        debug("received message: ", message.path);
 
-    maildir.on("update", async (maildir, message) => {
-        let {path, inbox, flags} = maildir;
-        
-        flags = Object.assign(message.flags, flags);
+        const db = this.db.load(message.owner);
 
-        if (inbox == ".spam")
-            flags.spam = true;
+        let headers = await message.parseHeaders();
 
-        await message.update(Object.assign(message.toJSON(), {flags, path, inbox}));
-        
-        debug("message updated: %s %s", message.messageId, JSON.stringify({flags, inbox, path}));
-    });
+        if (!headers.messageId)
+            return;
 
-    debug("indexer loaded");
+        const dbMessage = await db.Message.loadByRawMessageId(headers.messageId);
+
+        // optimization, if path matches do nothing
+        if (dbMessage && message.path == dbMessage.path)
+            return;
+
+        const { flags, inbox, path } = message;
+        const data = Object.assign({}, { flags, inbox, path }, headers);
+
+
+        await db.Message.store(data);
+    }
 }
 
-module.exports.init = index;
+module.exports = Indexer;

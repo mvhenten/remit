@@ -1,5 +1,5 @@
 const test = require("tape");
-const Message = require("./message");
+const Message = require(".../message/message");
 const fs = require("fs");
 
 const { promisify } = require('util');
@@ -62,12 +62,12 @@ test("it updates inbox", async assert => {
     const message = new Message(fakeUser, filename);
 
     assert.equal(message.inbox, fakeInbox, "got expected inbox");
-    
+
     message.inbox = "new";
     message.flags = { seen: false };
-    
+
     await message.store();
-    
+
     assert.ok(!await access(message.path), "message was moved");
     assert.equal(message.inbox, ".new");
     assert.deepEqual(message.flags, { seen: false });
@@ -86,27 +86,27 @@ test("it creates new message", async assert => {
     // await writeFile(filename, email);
 
     // const message = new Message(fakeUser, filename);
-    
+
     // console.log(Message.compose);
-    
+
     const message = await Message.compose(fakeUser, {});
-    
+
     await message.parseHeaders();
-    
+
     console.log(message.headers);
-    
+
     console.log(message.path);
-    
-    
-    
+
+
+
 
     // assert.equal(message.inbox, fakeInbox, "got expected inbox");
-    
+
     // message.inbox = "new";
     // message.flags = { seen: false };
-    
+
     // await message.store();
-    
+
     // assert.ok(!await access(message.path), "message was moved");
     // assert.equal(message.inbox, ".new");
     // assert.deepEqual(message.flags, { seen: false });

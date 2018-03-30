@@ -5,6 +5,8 @@ const faker = require("faker");
 const ms = require("milliseconds");
 const {pullStream} = require("./util/stream");
 
+console.log("hello");
+
 function randomDate() {
     return new Date(Date.now() - ms.days(Math.round(Math.random() * 100)));
 }
@@ -29,7 +31,7 @@ const getMockData = (fakeId=getFakeId()) => ({
 
 test("it should store an article", async assert => {
     const message = new Message(db);
-    
+
     const fakeId = getFakeId();
     const mockData = getMockData(fakeId);
 
@@ -38,7 +40,7 @@ test("it should store an article", async assert => {
         const result = await message.loadByMessageId({ messageId });
 
         assert.deepEqual(result.values, {
-            path: "/tmp",   
+            path: "/tmp",
             contentType: undefined,
             mimeVersion: undefined,
             subject: mockData.subject,
@@ -62,11 +64,11 @@ test("it should store an article", async assert => {
 
 test("it should store parentId", async assert => {
     const message = new Message(db);
-    
+
     const fakeId = getFakeId();
     const fakeParent = getFakeId();
     const mockData = getMockData(fakeId);
-    
+
     mockData.references = fakeParent;
 
     try {
@@ -74,7 +76,7 @@ test("it should store parentId", async assert => {
         const result = await message.loadByMessageId({ messageId });
 
         assert.deepEqual(result.values, {
-            path: "/tmp",   
+            path: "/tmp",
             contentType: undefined,
             mimeVersion: undefined,
             subject: mockData.subject,
@@ -98,7 +100,7 @@ test("it should store parentId", async assert => {
 
 test("it should stream all children of a parent", async assert => {
     const message = new Message(db);
-    
+
     const fakeParent = getFakeId();
     const expect = [];
 
@@ -109,12 +111,12 @@ test("it should stream all children of a parent", async assert => {
         let result = await message.store(mockData);
         expect.push(result);
     }
-    
+
     const bydate = expect.sort((a, b) => a.date.getTime() - b.date.getTime());
-    
+
     const start = bydate[0];
     const [end] = bydate.slice(-1);
-    
+
     try {
         const {messageId} = expect[0];
         const result = await message.loadByMessageId({ messageId });
@@ -124,7 +126,7 @@ test("it should stream all children of a parent", async assert => {
         });
 
         let messages = await pullStream(stream);
-        
+
         messages = messages.map(msg => msg.value);
         assert.ok(messages.length, expect.length);
 
@@ -142,13 +144,13 @@ test("it should stream all children of a parent", async assert => {
 
 test("it should stream messages by thread", async assert => {
     const message = new Message(db);
-    
+
     const expect = [];
     const inbox = "superthread";
 
     for (var i = 0; i < 10; i++) {
         const fakeParent = getFakeId();
-        
+
         const thread = [];
 
         for (var j = 0; j < 10; j++) {
@@ -158,7 +160,7 @@ test("it should stream messages by thread", async assert => {
             let result = await message.store(mockData);
             thread.push(result);
         }
-        
+
         expect.push(thread);
     }
 
@@ -170,18 +172,18 @@ test("it should stream messages by thread", async assert => {
         let messages = await pullStream(stream);
 
         assert.ok(messages.length, expect.length);
-        
+
         expect.forEach(expected => {
            let expectedParent = expected[0].parentId;
-           
+
            const messagesForParent = messages.find(thread => {
                const {parentId} = thread[0];
                return parentId == expectedParent;
            });
-           
+
           expected.forEach(({messageId}) => {
               const present = messagesForParent.find(message => message.messageId == messageId);
-              
+
               assert.ok(present, `message ${messageId} present`);
           });
         });
@@ -191,6 +193,6 @@ test("it should stream messages by thread", async assert => {
     }
 
     assert.end();
-    
+
 });
 
