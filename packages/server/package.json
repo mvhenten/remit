@@ -1,7 +1,6 @@
 {
   "name": "remit-server",
   "version": "0.0.1",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "tape **/*_test.js"
@@ -39,5 +38,7 @@
     "uuid": "^3.1.0",
     "watchy": "^0.7.0",
     "yargs": "^10.0.3"
-  }
+  },
+  "keywords": [],
+  "description": ""
 }
