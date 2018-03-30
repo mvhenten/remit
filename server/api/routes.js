@@ -126,7 +126,13 @@ router.post("/api/message/:messageId/seen", async ctx => {
     const flags = {};
     flags.seen = true;
 
-    await Maildir.update(ctx.user, message, { flags });
+    const maildir = new Maildir(ctx.user);
+    const mailMessage = new MaildirMessage(maildir, message.path);
+
+    mailMessage.flags = flags;
+
+    await mailMessage.store();
+
     ctx.response.status = HTTP_STATUS_NO_CONTENT;
 });
 
