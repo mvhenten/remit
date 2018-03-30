@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "remit-client",
+  "name": "@remit-email/remit-client",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {

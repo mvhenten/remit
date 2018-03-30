@@ -1,5 +1,5 @@
 {
-  "name": "@remit-mail/rspamd",
+  "name": "@remit-email/rspamd",
   "version": "0.0.1",
   "description": "Wrapper for rspamd for remit-mail",
   "main": "rspamd.js",

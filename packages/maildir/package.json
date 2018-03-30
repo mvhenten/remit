@@ -1,5 +1,5 @@
 {
-  "name": "maildir",
+  "name": "@remit-email/maildir",
   "version": "1.0.0",
   "description": "",
   "main": "maildir.js",

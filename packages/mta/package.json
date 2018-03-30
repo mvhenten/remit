@@ -1,5 +1,5 @@
 {
-  "name": "mta",
+  "name": "@remit-email/mta",
   "version": "1.0.0",
   "description": "",
   "main": "mta.js",
