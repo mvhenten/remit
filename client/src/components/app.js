@@ -6,11 +6,6 @@ import Login from "./login";
 
 const route = require("../route/index");
 
-const appStyle = {
-	"height": "100vh",
-};
-
-
 export default class App extends Component {
 	handleRoute(evt) {
 		route(evt);
@@ -18,13 +13,11 @@ export default class App extends Component {
 
 	render() {
 		return (
-			<div id="app" class="solid white" style={appStyle}>
-				 <Router onChange={this.handleRoute}>
-					<Login path="/login" />
-					<Inbox path="/inbox/*" />
-					<Inbox path="/inbox/:folderId/:parentId?" />
-				</Router>
-			</div>
+			 <Router onChange={this.handleRoute}>
+				<Login path="/login" />
+				<Inbox path="/inbox/*" />
+				<Inbox path="/inbox/:folderId/:parentId?" />
+			</Router>
 		);
 	}
 }

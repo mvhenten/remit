@@ -13,18 +13,18 @@ const Error = ({ error }) => {
 export default class Maildir extends Component {
     constructor(props) {
         super(props);
-        
+
         this.onSubmit = this.onSubmit.bind(this);
         this.onChange = this.onChange.bind(this);
         this.setState = this.setState.bind(this);
     }
-    
+
     componentDidMount() {
         authStore.observe(this.setState);
         this.base.querySelector("form").reset();
         this.base.querySelector("[name]").focus();
     }
-    
+
     componentWillUnmount() {
         authStore.stopObserving(this.setState);
     }
@@ -64,7 +64,7 @@ export default class Maildir extends Component {
                         <h4>Enter your login details</h4>
                         <input autoFocus={true} onChange={this.onChange} type="text" name="name" placeholder="username" />
                         <input onChange={this.onChange} type="password" name="password" placeholder="***" />
-                        <button class="important solid">submit</button>
+                        <button type="submit" class="important solid">submit</button>
                         <Error error={this.state.error} />
                     </form>
                 </section>

@@ -29,19 +29,19 @@ const InboxListItem = ({href, title, unseen}) => {
 export default class Maildir extends Component {
 	constructor(props) {
 		super(props);
-		
+
 		this.state = maildirStore.getState();
 		this.setState = this.setState.bind(this);
 	}
-	
+
 	componentDidMount() {
 	    maildirStore.observe(this.setState);
 	}
 
 	render({filter}) {
 	    const {maildir=[]} = this.state;
-	    
-	    let style = { height: "100%" };
+
+	    let style = { flexBasis: "220px"};
 
 		return (
 			<article id="articles" style={style} class="solid dark">
@@ -50,6 +50,6 @@ export default class Maildir extends Component {
 			    </nav>
 			</article>
 		);
-		
+
 	}
 }

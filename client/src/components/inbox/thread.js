@@ -22,7 +22,7 @@ class MessageHtml extends Component {
 
 	componentDidMount() {
 		let trusted = prefStore.getState() || {};
-		
+
 
 		if (trusted.images && trusted.images.includes(this.props.from)) {
 			this.setState({
@@ -31,8 +31,8 @@ class MessageHtml extends Component {
 			});
 			return;
 		}
-		
-		
+
+
 		let images = this.base.querySelectorAll(".remit-image-placeholder");
 
 		if (images.length) {
@@ -48,10 +48,10 @@ class MessageHtml extends Component {
 		images.forEach((img) => {
 			if (!/^https/.test(img.dataset.src))
 				return;
-				
+
 			if (/beacon/.test(img.dataset.src))
 				return;
-			
+
 			if (!showImages) {
 				img.style.backgroundColor = "pink";
 				img.style.border = "3px solid #ccc";
@@ -121,7 +121,7 @@ const MessageHeaders = ({ message }) => {
 
 const ThreadItem = ({ message }) => {
 	return (
-		<section class="solid white shadow-1 margin-bottom-1">
+		<section class="solid white margin-bottom-1">
 			<MessageHeaders message={message} />
 			<section class="type">
 				<MessageBody message={message} />
@@ -134,7 +134,7 @@ const ThreadList = ({ messages }) => {
 	if (!messages) return null;
 
 	let style = { width: "100%", overflow: "scroll" };
-	
+
 	return (
 		<div>
 			{messages.map(message => (<ThreadItem message={message} />))}
@@ -153,18 +153,18 @@ export default class Message extends Component {
 	componentDidMount() {
 		threadStore.observe(this.setState);
 	}
-	
+
 	componentWillUnmount() {
 		threadStore.stopObserving(this.setState);
 	}
 
 	render({ id }) {
 		if (!id) return null;
-		
+
 		const messages = this.state.threads[id];
 
 		return (
-			<article class="solid light padding-right-1">
+			<article class="padding-1">
 				<ThreadList messages={messages} />
 			</article>
 		);

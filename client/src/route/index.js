@@ -8,67 +8,67 @@ const { threadStore } = require("../action/thread");
 const { appState } = require("../action/app");
 const { authStore } = require("../action/auth");
 
-const keyboard = require("../lib/keys");
+// const keyboard = require("../lib/keys");
 
 
-keyboard.reset();
+// keyboard.reset();
 
-keyboard.context("messages", kb => {
-    keyboard.on("tab", (evt) => {
-        evt.preventDefault();
-        keyboard.nextContext();
-    });
+// keyboard.context("messages", kb => {
+//     keyboard.on("tab", (evt) => {
+//         evt.preventDefault();
+//         keyboard.nextContext();
+//     });
 
-    kb.on("up", (evt) => {
-        evt.preventDefault();
-        appState.selectPrevThread(evt);
-    });
+//     kb.on("up", (evt) => {
+//         evt.preventDefault();
+//         appState.selectPrevThread(evt);
+//     });
 
-    kb.on("down", (evt) => {
-        evt.preventDefault();
-        appState.selectNextThread(evt);
-    });
+//     kb.on("down", (evt) => {
+//         evt.preventDefault();
+//         appState.selectNextThread(evt);
+//     });
 
-    kb.on("del", (evt) => {
-        evt.preventDefault();
-        appState.deleteThread();
-    });
-});
+//     kb.on("del", (evt) => {
+//         evt.preventDefault();
+//         appState.deleteThread();
+//     });
+// });
 
-keyboard.context("thread", kb => {
-    keyboard.on("tab", (evt) => {
-        evt.preventDefault();
-        keyboard.nextContext();
-    });
+// keyboard.context("thread", kb => {
+//     keyboard.on("tab", (evt) => {
+//         evt.preventDefault();
+//         keyboard.nextContext();
+//     });
 
-    kb.on("up", (evt) => {
-        evt.preventDefault();
+//     kb.on("up", (evt) => {
+//         evt.preventDefault();
 
-        console.log("up thread..");
-    });
+//         console.log("up thread..");
+//     });
 
-    kb.on("down", (evt) => {
-        evt.preventDefault();
-        console.log("down thread");
-    });
+//     kb.on("down", (evt) => {
+//         evt.preventDefault();
+//         console.log("down thread");
+//     });
 
-    kb.on("del", (evt) => {
-        evt.preventDefault();
-        // appState.deleteThread();
-    });
-});
+//     kb.on("del", (evt) => {
+//         evt.preventDefault();
+//         // appState.deleteThread();
+//     });
+// });
 
-keyboard.context("header", kb => {
-   kb.on("tab", (evt) => {
-       console.log(evt.target.tagName);
-       console.log("TAB");
+// keyboard.context("header", kb => {
+//   kb.on("tab", (evt) => {
+//       console.log(evt.target.tagName);
+//       console.log("TAB");
 
-        evt.preventDefault();
-        keyboard.nextContext();
-   });
-});
+//         evt.preventDefault();
+//         keyboard.nextContext();
+//   });
+// });
 
-keyboard.setContext("messages");
+// keyboard.setContext("messages");
 
 
 router.use((ctx, next) => {
@@ -113,7 +113,7 @@ router.use("/inbox/:folderId", async(ctx, next) => {
     const { messages } = thread;
     const [activeParent] = messages;
 
-    route(`/inbox/${folderId}/${activeParent.parentId}`);
+    // route(`/inbox/${folderId}/${activeParent.parentId}`);
     next();
 });
 
