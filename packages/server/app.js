@@ -1,11 +1,11 @@
 const argv = require('yargs').argv;
 const config = require("config");
-const Maildir = require("./maildir/maildir");
-const Mta = require("./mta/mta");
-const Indexer = require("./index/index");
-const Rspamd = require("./rspamd/rspamd");
+const Maildir = require("@remit-email/maildir/maildir");
+const Mta = require("@remit-email/mta/mta");
+const Indexer = require("@remit-email/index/index");
+const Rspamd = require("@remit-email/rspamd/rspamd");
 
-require("./api/routes");
+require("@remit-email/api/routes");
 
 const init = async () => {
 
