@@ -2,7 +2,7 @@ const debug = require("debug")("remit:mta");
 const EventEmitter = require("events");
 const fs = require("graceful-fs");
 
-const Message = require("../message/message");
+const Message = require("@remit-email/message/message");
 
 class MTA extends EventEmitter {
     async scan(Maildir) {

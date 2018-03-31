@@ -8,5 +8,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@remit-email/message": "0.0.1",
+    "debug": "^3.1.0",
+    "graceful-fs": "^4.1.11"
+  }
 }

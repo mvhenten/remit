@@ -8,5 +8,12 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "graceful-fs": "^4.1.11"
+  },
+  "dependencies": {
+    "maildir-flags": "0.0.1",
+    "uuid": "^3.2.1"
+  }
 }

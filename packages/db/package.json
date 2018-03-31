@@ -8,5 +8,13 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "drawers": "0.0.2",
+    "koa-jwt": "^3.3.1",
+    "levelup": "^2.0.2",
+    "memdown": "^2.0.0",
+    "milliseconds": "^1.0.3",
+    "uuid": "^3.2.1"
+  }
 }
