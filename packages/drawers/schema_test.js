@@ -1,11 +1,12 @@
 "use strict";
 
-
 const test = require("tape");
-const testDb = require("./adapter/level").testDb();
+const Db = require("./adapter/memdown");
 const Person = require("./fixtures/person");
 const createPersons = require("./fixtures/batch");
 const collectStream = require("./util/collect-stream");
+
+const testDb = new Db();
 
 function uuid() {
     return `${Date.now().toString(36)}-${Math.random().toString(36)}`;

@@ -26,11 +26,13 @@
   "homepage": "https://github.com/mvhenten/drawers#readme",
   "devDependencies": {
     "async": "^2.5.0",
-    "levelup": "^1.3.9",
-    "memdown": "^1.2.4",
+    "memdown": "^1.4.1",
     "tape": "^4.8.0"
   },
   "dependencies": {
-    "izza": "^1.0.1"
+    "encoding-down": "^4.0.0",
+    "izza": "^1.0.1",
+    "leveldown": "^3.0.0",
+    "levelup": "^2.0.2"
   }
 }
