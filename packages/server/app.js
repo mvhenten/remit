@@ -9,7 +9,7 @@ require("@remit-email/api/routes");
 
 const init = async () => {
 
-    const Db = require("./db/db");
+    const Db = require("@remit-email/db/db");
     const mta = new Mta();
     const rspamd = new Rspamd();
     const indexer = new Indexer(Db);

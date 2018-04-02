@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@remit-email/api": "0.0.1",
+    "@remit-email/db": "0.0.1",
     "@remit-email/index": "0.0.1",
     "@remit-email/maildir": "0.0.1",
     "@remit-email/mta": "0.0.1",

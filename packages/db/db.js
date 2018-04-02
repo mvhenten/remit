@@ -1,5 +1,3 @@
-
-
 const db = require("drawers/adapter/level");
 const cache = new Map();
 const Message = require("./message");
@@ -11,7 +9,7 @@ function load(user){
 
         cache.set(user.name, store);
     }
-        
+
     return cache.get(user.name);
 }
 
