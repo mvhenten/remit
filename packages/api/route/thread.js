@@ -2,29 +2,22 @@ const Router = require("koa-router");
 const router = new Router();
 
 const { Transform } = require('stream');
-const MaildirMessage = require("../../message/message");
-const Maildir = require("../../maildir/maildir");
-const maildir = require("../../maildir/dir");
+const MaildirMessage = require("@remit-email/message/message");
+const Maildir = require("@remit-email/maildir/maildir");
+const { counts } = require("@remit-email/maildir/dir");
 
 const streamJSON = require("drawers/util/json-stream");
 const { NotFound } = require("../lib/http-not-found");
 
-const {
-    HTTP_STATUS_NOT_FOUND,
-    HTTP_STATUS_CONFLICT,
-    HTTP_STATUS_CREATED,
-    HTTP_STATUS_NO_CONTENT,
-} = require("../lib/http-constant");
+const { CONFLICT } = require("http-status-codes");
 
 const { pluck, build, mixin, limit } = require("../stream/util");
 
 router.get("/api/threads/:id", async ctx => {
     const { id } = ctx.params;
 
-    const folders = await maildir.counts(ctx.user);
+    const folders = await counts(ctx.user);
     const folder = folders.find(folder => folder.id == id);
-
-    console.log("WFT?");
 
     if (!folder) return NotFound(ctx);
 
@@ -40,6 +33,9 @@ function mixinMessage(user) {
         objectMode: true,
         async transform(chunk, encoding, next) {
             const message = chunk.toJSON();
+
+            console.log("FOO", message);
+
             const messageSource = new MaildirMessage(user, message.path);
             const { body } = await messageSource.parseMessage();
 
@@ -68,7 +64,7 @@ router.delete("/api/thread/:id", async ctx => {
         }
     }
 
-    ctx.response.status = HTTP_STATUS_NO_CONTENT;
+    ctx.response.status = NO_CONTENT;
 });
 
 module.exports = router;

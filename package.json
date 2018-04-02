@@ -1,9 +1,16 @@
 {
 	"devDependencies": {
+		"eslint": "^4.19.1",
 		"lerna": "^2.9.1"
 	},
 	"dependencies": {
 		"config": "^1.30.0",
 		"debug": "^3.1.0"
+	},
+	"scripts": {
+		"start": "node packages/server/app"
+	},
+	"eslintConfig": {
+		"extends": "eslint-config-synacor"
 	}
 }

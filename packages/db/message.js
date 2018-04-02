@@ -3,7 +3,6 @@
 const Schema = require("drawers");
 const Types = require("izza/types");
 const uuidv5 = require('uuid/v5');
-const uuid = require("uuid");
 const {pullStream} = require("./util/stream");
 const { Transform } = require('stream');
 const ms = require("milliseconds");

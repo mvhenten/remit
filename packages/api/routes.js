@@ -7,14 +7,13 @@ const app = new Koa();
 const router = new Router();
 
 const Db = require("../db/db");
-const MaildirMessage = require("../message/message");
-const Maildir = require("../maildir/maildir");
 const debug = require("debug")("remit:api");
 const jwt = require('koa-jwt');
 const webtoken = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-
 const bodyParser = require('koa-body');
+const { counts } = require("@remit-email/maildir/dir");
+
 
 const {
     HTTP_STATUS_UNAUTHORIZED,
@@ -57,7 +56,6 @@ app.use(async(ctx, next) => {
 const secret = config.auth.secret;
 app.use(jwt({ secret, passthrough: true }));
 
-const { counts } = require("../maildir/dir");
 
 router.post("/api/auth", bodyParser({ multipart: true }), async(ctx) => {
     const { username, password } = ctx.request.body.fields;
@@ -103,80 +101,12 @@ router.get("/api/maildir", async ctx => {
     ctx.body = { maildir };
 });
 
-router.get("/api/message/:messageId", async ctx => {
-    const message = await ctx.db.Message.loadByMessageId(ctx.params);
 
-    if (!message)
-        return NotFound(ctx);
-
-    const folders = await counts(ctx.user);
-    const folder = folders.find(({ folder }) => message.inbox == folder);
-    const messageSource = new MaildirMessage(ctx.user, message.path);
-    const { body } = await messageSource.parseMessage();
-
-    ctx.body = Object.assign(message.toJSON(), { folder, body });
-});
-
-router.post("/api/message/:messageId/seen", async ctx => {
-    const message = await ctx.db.Message.loadByMessageId(ctx.params);
-
-    if (!message)
-        return NotFound(ctx);
-
-    const flags = {};
-    flags.seen = true;
-
-    const maildir = new Maildir(ctx.user);
-    const mailMessage = new MaildirMessage(maildir, message.path);
-
-    mailMessage.flags = flags;
-
-    await mailMessage.store();
-
-    ctx.response.status = HTTP_STATUS_NO_CONTENT;
-});
-
-
-router.put("/api/message/:messageId", bodyParser(), async ctx => {
-    const { messageId } = ctx.params;
-    const flags = ctx.request.body;
-
-    for (let flag in flags) {
-        flags[flag] = (flags[flag] == "true");
-    }
-
-    const message = await ctx.db.Message.loadByMessageId({ messageId });
-
-    if (!message) return;
-
-    await Maildir.update(ctx.user, message, { flags });
-    ctx.response.status = HTTP_STATUS_NO_CONTENT;
-});
-
-router.put("/api/message/:messageId/:inbox", async ctx => {
-    const { messageId, inbox } = ctx.params;
-    const message = await ctx.db.Message.loadByMessageId({ messageId });
-
-    if (!message) return;
-
-    await Maildir.update(ctx.user, message, { inbox });
-    ctx.response.status = HTTP_STATUS_NO_CONTENT;
-});
-
-router.delete("/api/message/:messageId", async ctx => {
-    const message = await ctx.db.Message.loadByMessageId(ctx.params);
-
-    if (!message) return;
-
-    await Maildir.unlink(ctx.user, message);
-    ctx.response.status = HTTP_STATUS_NO_CONTENT;
-});
-
+router.use(require("./route/message").routes());
 router.use(require("./route/thread").routes());
 
 
 app
-    // .use(require("./route/thread").routes())
     .use(router.routes())
     .use(router.allowedMethods())
     .listen(8082, () => {

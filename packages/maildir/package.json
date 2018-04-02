@@ -13,6 +13,7 @@
     "graceful-fs": "^4.1.11"
   },
   "dependencies": {
+    "@remit-email/message": "0.0.1",
     "maildir-flags": "0.0.1",
     "uuid": "^3.2.1"
   }
