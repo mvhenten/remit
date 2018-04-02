@@ -17,8 +17,6 @@ class Indexer {
 
         const dbMessage = await db.Message.loadByRawMessageId(headers.messageId);
 
-        console.log(dbMessage.toJSON());
-
         // optimization, if path matches do nothing
         if (dbMessage && message.path == dbMessage.path)
             return;
