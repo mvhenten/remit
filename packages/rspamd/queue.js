@@ -1,5 +1,5 @@
 class Queue {
-    constructor(maxConcurrent=500, delay=10) {
+    constructor(maxConcurrent=300, delay=10) {
         this.concurrent = 0;
         this.maxConcurrent = maxConcurrent;
         this.delay = delay;
