@@ -1,6 +1,6 @@
 {
   "name": "@remit-email/maildir",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "maildir.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "graceful-fs": "^4.1.11"
   },
   "dependencies": {
-    "@remit-email/message": "0.0.1",
+    "@remit-email/message": "^0.0.2",
     "maildir-flags": "0.0.1",
     "uuid": "^3.2.1"
   }

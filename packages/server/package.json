@@ -1,6 +1,6 @@
 {
   "name": "@remit-email/remit-server",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "index.js",
   "scripts": {
     "test": "tape **/*_test.js"
@@ -14,16 +14,16 @@
     "tape": "^4.8.0"
   },
   "dependencies": {
-    "@remit-email/api": "0.0.1",
-    "@remit-email/db": "0.0.1",
-    "@remit-email/index": "0.0.1",
-    "@remit-email/maildir": "0.0.1",
-    "@remit-email/mta": "0.0.1",
-    "@remit-email/rspamd": "0.0.1",
+    "@remit-email/api": "^0.0.2",
+    "@remit-email/db": "^0.0.2",
+    "@remit-email/index": "^0.0.2",
+    "@remit-email/maildir": "^0.0.2",
+    "@remit-email/mta": "^0.0.2",
+    "@remit-email/rspamd": "^0.0.2",
     "bcrypt": "^1.0.3",
     "config": "^1.26.2",
     "dev-null": "^0.1.1",
-    "drawers": "0.0.2",
+    "drawers": "^0.0.2",
     "email-filter": "0.0.1",
     "graceful-fs": "^4.1.11",
     "jsonwebtoken": "^8.1.0",

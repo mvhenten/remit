@@ -1,6 +1,6 @@
 {
   "name": "@remit-email/api",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "routes.js",
   "directories": {
@@ -12,11 +12,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@remit-email/maildir": "0.0.1",
-    "@remit-email/message": "0.0.1",
+    "@remit-email/maildir": "^0.0.2",
+    "@remit-email/message": "^0.0.2",
     "bcrypt": "^1.0.3",
     "config": "^1.30.0",
-    "drawers": "0.0.2",
+    "drawers": "^0.0.2",
     "http-status-codes": "^1.3.0",
     "koa": "^2.5.0",
     "koa-body": "^2.5.0",
