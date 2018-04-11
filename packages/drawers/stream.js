@@ -1,19 +1,6 @@
-const { Transform, Writable } = require('stream');
+const { Transform } = require('stream');
 const JSONStream = require("./util/json-stream");
-
-function collect(collector) {
-    const streamCollector = new Writable({
-        objectMode: true,
-        write(chunk, encoding, next) {
-            this.values.push(chunk);
-            next();
-        },
-    });
-
-    streamCollector.values = [];
-    return streamCollector;
-}
-
+const collect = require("./util/collect-stream");
 
 class StreamWrapper extends Transform {
     constructor(options) {
