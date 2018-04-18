@@ -22,16 +22,12 @@ class Person extends Schema {
                 key: "person:$id",
                 value: (values) => values
             }, {
-                name: "byNameAndDate",
-                prepare: (values) => {
-                    values.date = values.date.getTime().toString(36);
-                    return values;
-                },
-                key: "bydate:$name:$date:$id",
+                name: "byDate",
+                key: "byDate:$date:$id",
                 value: (values) => values.id
             }, {
                 name: "byAge",
-                key: "byage:$age:$id",
+                key: "byAge:$age:$id",
                 value: (values) => values.id
             }]
         };

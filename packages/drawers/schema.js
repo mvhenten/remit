@@ -46,7 +46,7 @@ function validate(schema, values, done) {
 
     for (let key in schema) {
         let err = validateValue(schema, key, values[key]);
-        
+
         if (err && done) return done(err);
         if (err) throw err;
     }
@@ -58,7 +58,8 @@ function validate(schema, values, done) {
 }
 
 
-function operation(type, key, value) {
+function generateOperation(type, key, value) {
+
     if (type == "put") {
         return {
             type,
@@ -82,10 +83,17 @@ function generateKey(index, values) {
     return Key.generate(index.key, values);
 }
 
-function operations(op, model, values) {
+function operations(operation, model, values) {
     let {indexes} = model.storage;
 
-    let ops = indexes.map(index => operation(op, generateKey(index, values), index.value(values)));
+    let ops = indexes.map(index => {
+        let op = generateOperation(operation, generateKey(index, values), index.value(values));
+
+        let prefix = op.key.shift();
+        op.prefix = model.db.sublevel(prefix);
+
+        return op;
+    });
 
     return ops;
 }
@@ -126,19 +134,17 @@ function generateGetters() {
             get: function() {
                 return this.values[key];
             },
-            
+
             set: function(value) {
                 let err = validateValue(schema, key, value);
-                
+
                 if (err) throw err;
-                
+
                 this.vaues[key] = value;
             }
         });
     });
 }
-
-
 
 class Schema {
     constructor(db, values) {
@@ -159,7 +165,7 @@ class Schema {
 
         Object.freeze(this.constructor.prototype);
     }
-    
+
     get db() {
         return self.get(this).db;
     }
@@ -185,9 +191,12 @@ class Schema {
             let err = izza.check(Object, values);
 
             if (err) return done(err);
-            
-            db.get(generateKey(index, values), (err, result) => {
-                if (err) return done(err);
+
+            let searchKey = generateKey(index, values);
+            let prefix = searchKey.shift();
+
+            db.sublevel(prefix).get(searchKey, (err, result) => {
+                if (err && err.name != "NotFoundError") return done(err);
                 if (!result) return done();
 
                 if (index.name == this.storage.index)
@@ -200,28 +209,26 @@ class Schema {
 
     streamByKey(keyName, query = {}) {
         let index = this.storage.indexes.find(index => index.name == keyName);
+
         if (!index)
             throw new Error("Invalid key name: " + keyName);
 
         let {db} = self.get(this);
-        let parsedQuery = Object.assign({}, query);
 
-        ["lt", "gt", "lte", "gte"].forEach(key => {
+        let parsedQuery = Object.assign({}, query);
+        let prefix = generateKey(index, {}).shift();
+
+        ["start", "end"].forEach(key => {
             if (!query[key])
                 return;
 
-            let parsedKey = generateKey(index, query[key]);
-            parsedQuery[key] = parsedKey.replace(/~~?$/, '');
-        });
-        
-        ["keys", "values"].forEach(key => {
-            if (query[key] === false)
-                parsedQuery[key] = false;
+            let parsedKey = generateKey(index, query[key]).slice(1);
+            parsedQuery[key] = parsedKey;
         });
 
         parsedQuery.valueEncoding = "json";
 
-        let stream = db.createReadStream(parsedQuery);
+        let stream = db.sublevel(prefix).createReadStream(parsedQuery);
 
         if (index.transform)
             return stream.pipe(index.transform(this));
@@ -235,9 +242,11 @@ class Schema {
         if (!/^(put|del)$/.test(operation))
             return done(new Error("You can only batch 'put' and 'del'"));
 
-        validate(schema, values, (err, values) => {
-            if (err) return done(err);
-            return done(null, operations(operation, this, values));
+        return promise(done, done => {
+            validate(schema, values, (err, values) => {
+                if (err) return done(err);
+                return done(null, operations(operation, this, values));
+            });
         });
     }
 
@@ -251,7 +260,9 @@ class Schema {
             validate(schema, values, (err, values) => {
                 if (err) return done(err);
 
-                db.batch(operations("put", this, values), err => {
+                let ops = operations("put", this, values);
+
+                db.batch(ops, err => {
                     let me = new this.constructor(db, values);
                     done(err, me);
                 });
@@ -262,12 +273,12 @@ class Schema {
     update(...args) {
         const parseArgs = args => {
             if (args.length == 2) return args;
-            
+
             let arg = args[0];
-            
+
             if (typeof arg == "function")
                 return [this.values, arg];
-                
+
             return [arg || this.values];
         };
 
@@ -318,7 +329,7 @@ class Schema {
     toJSON() {
         return Object.assign({}, this.values);
     }
-    
+
     toObject() {
         return this.toJSON();
     }

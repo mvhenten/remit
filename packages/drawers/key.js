@@ -11,6 +11,8 @@ function format(ast, source) {
     if (typeof ast == "string")
         ast = parse(ast);
 
+    // const sublevel = ast.shift();
+
     let values = ast.map(key => {
         if (!key.name)
             return key;
@@ -22,7 +24,12 @@ function format(ast, source) {
             return format(key.node, source[key.name]);
     });
 
-    return values.join("~");
+    return values;
+
+    // return {
+    //     prefix: sublevel,
+    //     key: values
+    // };
 }
 
 module.exports.format = format;
