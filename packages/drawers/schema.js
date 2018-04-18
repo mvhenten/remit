@@ -3,6 +3,7 @@
 const Key = require("./key");
 const izza = require("izza");
 const promisify = require("util").promisify;
+const StreamWrapper = require("./stream");
 
 function promise(done, callback) {
     let p = promisify(callback);
@@ -233,7 +234,7 @@ class Schema {
         if (index.transform)
             return stream.pipe(index.transform(this));
 
-        return stream;
+        return stream.pipe(new StreamWrapper());
     }
 
     batch(operation, values, done) {
