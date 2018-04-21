@@ -5,28 +5,17 @@ const Person = require("./fixtures/person");
 const ms = require("milliseconds");
 const collectStream = require("./util/collect-stream");
 const Schema = require("./schema");
-const {Transform} = require("stream");
+const { Transform } = require("stream");
 
-function uuid() {
+const testDb = require("./adapter/memdown");
+
+function fakeId() {
     return `${Date.now().toString(36)}-${Math.random().toString(36)}`;
-}
-
-
-
-const level = require('level-hyper');
-const bytewise = require('bytewise');
-const sublevel = require('level-sublevel/bytewise');
-
-function testDb() {
-    const TEST_DB_PATH = "/tmp/drawers-" + Math.random().toString(36);
-    const root = level(TEST_DB_PATH, { valueEncoding: 'json' });
-    const db = sublevel(root);
-    return db;
 }
 
 test("A db model is stored and can be loaded", (assert) => {
     let values = {
-        id: uuid(),
+        id: fakeId(),
         name: "Matt",
         age: 36,
         date: new Date("03-19-1979")
@@ -49,9 +38,9 @@ test("A db model is stored and can be loaded", (assert) => {
     });
 });
 
-test("A db model is stored and loaded with async", async (assert) => {
+test("A db model is stored and loaded with async", async(assert) => {
     let values = {
-        id: uuid(),
+        id: fakeId(),
         name: "Matt",
         age: 36,
         date: new Date("03-19-1979")
@@ -72,7 +61,7 @@ test("A db model is stored and loaded with async", async (assert) => {
 
 test("a model stores a secondary index", assert => {
     let values = {
-        id: uuid(),
+        id: fakeId(),
         name: Math.random().toString(36),
         age: 36,
         date: new Date("03-19-1979")
@@ -83,7 +72,7 @@ test("a model stores a secondary index", assert => {
     person.store(values, err => {
         assert.ok(!err, "no error");
 
-        person.loadByDate(values, function(err, id){
+        person.loadByDate(values, function(err, id) {
             assert.ok(!err, "no error");
             assert.equal(id, values.id);
             assert.end();
@@ -93,7 +82,7 @@ test("a model stores a secondary index", assert => {
 
 test("A db model can be updated", (assert) => {
     let values = {
-        id: uuid(),
+        id: fakeId(),
         name: "Matt",
         age: 36,
         date: new Date("03-19-1979")
@@ -121,7 +110,7 @@ test("A db model can be updated", (assert) => {
 
 test("A db model can define getters", assert => {
     let values = {
-        id: uuid(),
+        id: fakeId(),
         name: "Matt2",
         age: 36,
         date: new Date("03-19-1979")
@@ -143,7 +132,7 @@ test("A db model can define getters", assert => {
 
 test("load does not throw errors", assert => {
     let values = {
-        id: uuid(),
+        id: fakeId(),
         name: "Matt2",
         age: 36,
         date: new Date("03-19-1979")
@@ -209,7 +198,7 @@ test("it can stream by date", async assert => {
             id: (Math.random() * 10e16).toString(36),
             name: "Batched person " + i,
             age: 36,
-            date: new Date(Date.now() - ms.days(N_TO_CREATE-i))
+            date: new Date(Date.now() - ms.days(N_TO_CREATE - i))
         });
 
         batch = batch.concat(values);
@@ -218,13 +207,13 @@ test("it can stream by date", async assert => {
     await db.batch(batch);
 
     person.streamByDate({
-         reverse: true,
-         start: {
-             date: new Date()
-         },
-         end: {
-             date: new Date(Date.now() - ms.days(22))
-         }
+        reverse: true,
+        start: {
+            date: new Date()
+        },
+        end: {
+            date: new Date(Date.now() - ms.days(22))
+        }
     }).pipe(collect);
 
     collect.on("finish", () => {
@@ -233,7 +222,7 @@ test("it can stream by date", async assert => {
     });
 });
 
-test("it can between a given age", async assert => {
+test("it can query results between two keys", async assert => {
     let db = testDb();
     let person = new Person(db);
     const collect = collectStream();
@@ -260,12 +249,12 @@ test("it can between a given age", async assert => {
     await db.batch(batch);
 
     person.streamByAge({
-         start: {
-             age: 9
-         },
-         end: {
-             age: 14
-         }
+        start: {
+            age: 9
+        },
+        end: {
+            age: 14
+        }
     }).pipe(collect);
 
     collect.on("finish", () => {
@@ -279,14 +268,100 @@ test("it can between a given age", async assert => {
     });
 });
 
+async function createPersonsBatch(person, N_TO_CREATE = 10) {
+    let batch = [];
+
+    const rawValues = [];
+
+    for (let i = 0; i < N_TO_CREATE; i++) {
+        let data = {
+            id: (Math.random() * 10e16).toString(36),
+            name: "Batched person " + i,
+            age: 10 + i,
+            date: new Date()
+        };
+
+        let values = await person.batch("put", data);
+
+        rawValues.push(data);
+        batch = batch.concat(values);
+    }
+
+    return [batch, rawValues];
+}
+
+test("it can query results between two keys", async assert => {
+    let db = testDb();
+    let person = new Person(db);
+    const collect = collectStream();
+
+    const N_TO_CREATE = 10;
+
+    const [batch, rawValues] = await createPersonsBatch(person, N_TO_CREATE);
+    await db.batch(batch);
+
+    person.streamByAge({
+        start: {
+            age: 9
+        },
+        end: {
+            age: 14
+        }
+    }).pipe(collect);
+
+    collect.on("finish", () => {
+        let expect = rawValues.slice(0, 5).map(value => ({
+            key: [value.age, value.id],
+            value: value.id
+        }));
+
+        assert.deepEqual(collect.values, expect);
+        assert.end();
+    });
+});
+
+test("it can limit results", async assert => {
+    let db = testDb();
+    let person = new Person(db);
+    const collect = collectStream();
+
+    const N_TO_CREATE = 10;
+
+    const [batch, rawValues] = await createPersonsBatch(person, N_TO_CREATE);
+    await db.batch(batch);
+
+    person.streamByAge({ reverse: true })
+        .limit(5)
+        .pipe(collect);
+
+    collect.on("finish", () => {
+        let values = collect.values;
+        let paginationKey = values.pop();
+
+        let lastExpected = rawValues[4];
+
+        assert.deepEqual(paginationKey, {
+            paginationKey: [lastExpected.age, lastExpected.id]
+        });
+
+        let expect = rawValues.slice(-5).map(value => ({
+            key: [value.age, value.id],
+            value: value.id
+        })).reverse();
+
+        assert.deepEqual(values, expect);
+        assert.end();
+    });
+});
+
 test("it can apply a transform", async assert => {
     function loadCarStream(self) {
         return new Transform({
             objectMode: true,
             async transform(chunk, encoding, next) {
                 let id = chunk.value;
-                let key  = chunk.key;
-                let value = await self.loadById({id});
+                let key = chunk.key;
+                let value = await self.loadById({ id });
                 next(null, { value, key });
             }
         });
@@ -320,8 +395,7 @@ test("it can apply a transform", async assert => {
     let db = testDb();
     let car = new Car(db);
 
-    let values = [
-        {
+    let values = [{
             id: Math.random().toString(36),
             brand: "Mercedes"
         },
@@ -355,68 +429,3 @@ test("it can apply a transform", async assert => {
         assert.end();
     });
 });
-
-// // test("can stream all joes between a given date", assert => {
-// //     let start = Date.now();
-// //     let end = start + (1000 * 1000);
-
-// //     let batch = createPersons(testDb, {
-// //         name: "joe",
-// //         start
-// //     });
-
-// //     batch.create(99, err => {
-// //         let skey = `bydate~joe~${(start - 1).toString(36)}`;
-// //         let ekey = `bydate~joe~${end.toString(36)}`;
-
-// //         let count = 0;
-
-// //         assert.ok(!err);
-
-// //         testDb
-// //             .createReadStream({
-// //                 gte: skey,
-// //                 lte: ekey
-// //             })
-// //             .on("data", ({key, value}) => {
-// //                 count++;
-// //             })
-// //             .on("end", () => {
-// //                 assert.ok(count, 99, "got all results back");
-// //                 batch.teardown(assert.end);
-// //             });
-// //     });
-// // });
-
-// // test("can stream all henries", assert => {
-// //     let start = Date.now();
-
-// //     const N_CREATE = 9;
-
-// //     let batch = createPersons(testDb, {
-// //         name: "henry",
-// //         start
-// //     });
-
-// //     batch.create(N_CREATE, err => {
-// //         assert.ok(!err, "no error");
-// //         const person = new Person(testDb);
-
-// //         let query = {
-// //             gte: {
-// //                 name: "henry",
-// //                 date: new Date(start)
-// //             },
-// //             lte: {
-// //                 name: "henry",
-// //                 date: new Date(start + 10000)
-// //             }
-// //         };
-
-// //         person.streamByNameAndDate(query).pipe(collect).on("finish", (x) => {
-// //             assert.equal(collect.values.length, N_CREATE);
-// //             batch.teardown(assert.end);
-// //         });
-// //     });
-// // });
-
