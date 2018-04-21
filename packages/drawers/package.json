@@ -1,6 +1,6 @@
 {
   "name": "drawers",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Key streaming schema for leveldb",
   "main": "schema.js",
   "scripts": {
