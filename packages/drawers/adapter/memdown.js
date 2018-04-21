@@ -1,12 +1,13 @@
 "use strict";
 
 const memdown = require("memdown");
-const BaseWrapper = require("./base");
+const sublevel = require('level-sublevel/bytewise');
+const encode = require('encoding-down');
 
-class MemDownWrapper extends BaseWrapper {
-    constructor() {
-        super(memdown());
-    }
-}
+module.exports = () => {
+    const root = encode(memdown(), { valueEncoding: 'json' });
+    const db = sublevel(root, { valueEncoding: "json" });
 
-module.exports = MemDownWrapper;
+    return db;
+};
+
