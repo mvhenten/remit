@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mvhenten/drawers.git"
+    "url": "git+https://github.com/mvhenten/remit.git"
   },
   "keywords": [
     "leveldb",
@@ -20,10 +20,7 @@
   ],
   "author": "Matthijs van Henten",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/mvhenten/drawers/issues"
-  },
-  "homepage": "https://github.com/mvhenten/drawers#readme",
+  "homepage": "https://github.com/mvhenten/remit/tree/master/packages/drawers",
   "devDependencies": {
     "async": "^2.5.0",
     "encoding-down": "^4.0.0",
