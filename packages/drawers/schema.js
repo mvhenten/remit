@@ -134,14 +134,6 @@ function generateGetters() {
         Object.defineProperty(this.constructor.prototype, key, {
             get: function() {
                 return this.values[key];
-            },
-
-            set: function(value) {
-                let err = validateValue(schema, key, value);
-
-                if (err) throw err;
-
-                this.vaues[key] = value;
             }
         });
     });
