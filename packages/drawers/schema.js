@@ -224,7 +224,7 @@ class Schema {
         let stream = db.sublevel(prefix).createReadStream(parsedQuery);
 
         if (index.transform)
-            return stream.pipe(index.transform(this));
+            stream = stream.pipe(index.transform(this));
 
         return stream.pipe(new StreamWrapper());
     }
