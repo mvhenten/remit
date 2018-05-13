@@ -9,7 +9,7 @@ const { counts } = require("@remit-email/maildir/dir");
 const streamJSON = require("drawers/util/json-stream");
 const { NotFound } = require("../lib/http-not-found");
 
-const { CONFLICT } = require("http-status-codes");
+const { CONFLICT, NO_CONTENT } = require("http-status-codes");
 
 const { pluck, build, mixin, limit } = require("../stream/util");
 
@@ -21,7 +21,7 @@ router.get("/api/threads/:id", async ctx => {
 
     if (!folder) return NotFound(ctx);
 
-    ctx.body = ctx.db.Message.streamByThread(folder.folder)
+    ctx.body = ctx.db.Message.streamFromInboxAndDate(".silke")
         .pipe(build("messages"))
         .pipe(mixin({ folder }))
         .pipe(limit(50))

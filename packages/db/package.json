@@ -10,11 +10,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "drawers": "^0.0.2",
-    "koa-jwt": "^3.3.1",
-    "levelup": "^2.0.2",
+    "config": "^1.30.0",
+    "drawers": "^1.0.1",
+    "uuid": "^3.2.1"
+  },
+  "devDependencies": {
+    "encoding-down": "^4.0.0",
+    "faker": "^4.1.0",
     "memdown": "^2.0.0",
     "milliseconds": "^1.0.3",
-    "uuid": "^3.2.1"
+    "tape": "^4.9.0"
   }
 }

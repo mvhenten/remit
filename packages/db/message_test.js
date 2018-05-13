@@ -1,11 +1,11 @@
 const test = require("tape");
-const db = require("drawers/adapter/level").testDb();
+const db = require("drawers/adapter/memdown");
 const Message = require("./message");
 const faker = require("faker");
 const ms = require("milliseconds");
 const {pullStream} = require("./util/stream");
+const {CoercedAddress, CoercedDate, CoercedMessageId, DefaultValue} = require("./util/coerce");
 
-console.log("hello");
 
 function randomDate() {
     return new Date(Date.now() - ms.days(Math.round(Math.random() * 100)));
@@ -30,7 +30,7 @@ const getMockData = (fakeId=getFakeId()) => ({
 });
 
 test("it should store an article", async assert => {
-    const message = new Message(db);
+    const message = new Message(db());
 
     const fakeId = getFakeId();
     const mockData = getMockData(fakeId);
@@ -50,8 +50,8 @@ test("it should store an article", async assert => {
             to: mockData.to,
             date: mockData.date,
             references: [],
-            parentId: Message.coerceMessageId(fakeId),
-            messageId: Message.coerceMessageId(fakeId)
+            parentId: CoercedMessageId.coerce(fakeId),
+            messageId: CoercedMessageId.coerce(fakeId)
         });
 
     }
@@ -63,7 +63,7 @@ test("it should store an article", async assert => {
 });
 
 test("it should store parentId", async assert => {
-    const message = new Message(db);
+    const message = new Message(db());
 
     const fakeId = getFakeId();
     const fakeParent = getFakeId();
@@ -86,8 +86,8 @@ test("it should store parentId", async assert => {
             to: mockData.to,
             date: mockData.date,
             references: [fakeParent],
-            parentId: Message.coerceMessageId(fakeParent),
-            messageId: Message.coerceMessageId(fakeId)
+            parentId: CoercedMessageId.coerce(fakeParent),
+            messageId: CoercedMessageId.coerce(fakeId)
         });
 
     }
@@ -99,8 +99,7 @@ test("it should store parentId", async assert => {
 });
 
 test("it should stream all children of a parent", async assert => {
-    const message = new Message(db);
-
+    const message = new Message(db());
     const fakeParent = getFakeId();
     const expect = [];
 
@@ -117,30 +116,19 @@ test("it should stream all children of a parent", async assert => {
     const start = bydate[0];
     const [end] = bydate.slice(-1);
 
-    try {
-        const {messageId} = expect[0];
-        const result = await message.loadByMessageId({ messageId });
-        const stream = message.streamFromParentIdAndDate(result.parentId, {
-            start: start.date,
-            end: end.date.getTime() + 100
-        });
-
-        let messages = await pullStream(stream);
-
-        messages = messages.map(msg => msg.value);
-        assert.ok(messages.length, expect.length);
-
-        expect.forEach(({messageId}) => {
-            let present = messages.find(msg => msg.messageId == messageId);
-            assert.ok(present, "found message for id " + messageId);
-        });
-    }
-    catch (err) {
-        assert.fail(err);
-    }
-
-    assert.end();
+    const stream = message.streamByParent({parentId: fakeParent}, {
+        start: start.date,
+        end: end.date.getTime() + 100
+    })
+    .collect()
+    .on("finish", () => {
+        let result = stream.values.map(value => value.value.date);
+        assert.deepEqual(result, expect);
+        assert.end();
+    });
 });
+return;
+
 
 test("it should stream messages by thread", async assert => {
     const message = new Message(db);

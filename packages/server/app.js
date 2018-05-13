@@ -1,36 +1,42 @@
 const argv = require('yargs').argv;
-const config = require("config");
-const Maildir = require("@remit-email/maildir/maildir");
-const Mta = require("@remit-email/mta/mta");
 const Indexer = require("@remit-email/index/index");
-const Rspamd = require("@remit-email/rspamd/rspamd");
+const Queue = require("@remit-email/remit-queue");
 
 require("@remit-email/api/routes");
 
-const init = async () => {
 
+process.on("unhandledRejection", (err) => {
+    console.error(err);
+    process.exit(1);
+});
+
+/**
+ * TODO: simplify. MTA and Rspam can deal with simple data (user, path)
+ * - move rspamd into a lib and inject queues directly
+ * - after spam check move the message immediately
+ * - after spam check create message
+ * - parse headers and filter
+ *   * Filter does IO and needs to be re-tried
+ *  - push to queue a simple json message
+ *  - inject into indexer
+ *
+ */
+
+const init = async () => {
     const Db = require("@remit-email/db/db");
-    const mta = new Mta();
-    const rspamd = new Rspamd();
+    const queues = new Queue();
+
     const indexer = new Indexer(Db);
 
-    mta.on("message", message => rspamd.check(message));
+    queues.create("spam");
+    queues.create("message");
+    queues.create("headers");
 
-    rspamd.on("message", async message =>  {
-        message.filter();
-        await message.store();
-        indexer.index(message);
-    });
+    require("./worker/mta")(queues, argv);
+    require("./worker/rspamd")(queues);
+    require("./worker/message")(queues);
+    require("./worker/headers")(queues);
 
-    for (let user of config.users) {
-        const maildir = new Maildir(user);
-
-        if (argv.scan)
-            await mta.scan(maildir);
-
-        if (argv.watch)
-            mta.watch(maildir);
-    }
 };
 
 init();

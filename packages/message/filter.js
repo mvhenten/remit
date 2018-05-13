@@ -41,11 +41,11 @@ function matchFilter({filter}, headers) {
 }
 
 
-module.exports.match = function match(filters, message) {
+module.exports.match = function match(filters, headers) {
     let normalized = filters.map(({ filter, target }) => ({
         filter: parse(filter),
         target
     }));
 
-    return normalized.find(filter => matchFilter(filter, message.headers));
+    return normalized.find(filter => matchFilter(filter, headers));
 };

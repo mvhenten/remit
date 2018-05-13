@@ -4,7 +4,7 @@ const { parseHeaders, parseMessage } = require("./parser");
 const Filter = require("./filter");
 const Flags = require("maildir-flags");
 const Path = require("path");
-const {promisify} = require('util');
+const { promisify } = require('util');
 const fs = require("graceful-fs");
 const uuid = require("uuid");
 
@@ -23,7 +23,7 @@ State.update = (key, values) => {
 
 function compose(options) {
     return new Promise((resolve, reject) => {
-        new MailComposer(options).compile().build(function(err, msg){
+        new MailComposer(options).compile().build(function(err, msg) {
             if (err) return reject(err);
             resolve(msg);
         });
@@ -31,39 +31,34 @@ function compose(options) {
 }
 
 class MaildirMessage extends EventEmitter {
-    constructor(maildir, path) {
+    constructor(user, headers, path) {
         super();
 
-        let {flags} = Flags.parse(path);
+        let { flags } = Flags.parse(path);
 
-        State.set(this, {maildir, path, flags});
+        State.set(this, { user, headers, path, path, flags });
     }
 
-    /**
-     * Compose a new email.
-     *
-     * @constructor - returns a new instance of MaildirMessage
-     */
-    static async compose(user, {messageId=uuid(), references, text, subject, from, to, bcc}) {
-        let options = {
-            messageId,
-            references,
-            text,
-            subject,
-            from,
-            to,
-            bcc,
-            date: new Date()
-        };
+    // static async compose(user, { messageId = uuid(), references, text, subject, from, to, bcc }) {
+    //     let options = {
+    //         messageId,
+    //         references,
+    //         text,
+    //         subject,
+    //         from,
+    //         to,
+    //         bcc,
+    //         date: new Date()
+    //     };
 
-        const email = await compose(options);
-        const path = Path.join(user.maildir, '.drafts', messageId);
+    //     const email = await compose(options);
+    //     const path = Path.join(user.maildir, '.drafts', messageId);
 
-        await mkdirp(Path.dirname(path));
-        await writeFile(path, email);
+    //     await mkdirp(Path.dirname(path));
+    //     await writeFile(path, email);
 
-        return new MaildirMessage(user, path);
-    }
+    //     return new MaildirMessage(user, path);
+    // }
 
     get flags() {
         return Object.assign({}, State.get(this).flags);
@@ -72,13 +67,13 @@ class MaildirMessage extends EventEmitter {
     set flags(flags) {
         let origFlags = State.get(this).flags;
         flags = Object.assign(origFlags, flags);
-        State.update(this, {flags});
+        State.update(this, { flags });
     }
 
-    get owner() {
-        const {maildir} = State.get(this);
-        return maildir.owner;
-    }
+    // get owner() {
+    //     const { maildir } = State.get(this);
+    //     return maildir.owner;
+    // }
 
     get inbox() {
         const dirname = Path.dirname(this.path);
@@ -97,7 +92,7 @@ class MaildirMessage extends EventEmitter {
         const basename = Path.dirname(dirname);
         const target = Path.join(basename, inbox, filename);
 
-        State.update(this, {target});
+        State.update(this, { target });
     }
 
     get path() {
@@ -108,27 +103,14 @@ class MaildirMessage extends EventEmitter {
         return Path.basename(this.path);
     }
 
-    get user() {
-        return Object.assign({}, State.get(this).user);
-    }
-
     get isValid() {
-        if (!this.headers)
-            throw new Error("Can't validate without headers");
-
         return ["to", "messageId", "from"].every(key => {
             return this.headers[key];
         });
     }
 
-    unlink() {
+    delete() {
         return unlink(this.path);
-    }
-
-    filter() {
-        const {maildir} = State.get(this);
-        let match = Filter.match(maildir.filters, this);
-        if (match) this.inbox = match.target;
     }
 
     async store() {
@@ -140,22 +122,15 @@ class MaildirMessage extends EventEmitter {
         await mkdirp(Path.dirname(target));
 
         let path = Flags.format(target, this.flags);
-        State.set(this, Object.assign(State.get(this), {path}));
 
         if (path == source)
             return;
 
+        State.set(this, Object.assign(State.get(this), { path }));
+
         debug("Store message: ", this.path);
 
         return rename(source, this.path);
-    }
-
-    async parseHeaders() {
-        if (!this.headers) {
-            this.headers = await parseHeaders(this.path);
-        }
-
-        return this.headers;
     }
 
     async parseMessage() {

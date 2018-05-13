@@ -84,9 +84,9 @@ class Message extends Schema {
             }, {
                 name: "byParent",
                 key: "parent:$parentId:$sortDate:$messageId",
-                value: values => values.messageId,
+                value: ({messageId}) => messageId,
                 transform: self => createLoadMessageStream(self),
-                prepare: ({parentId, date, messageId}) => ({
+                prepare: ({parentId, date, messageId}) =>  ({
                     parentId,
                     messageId,
                     sortDate: createSortDate(date)
@@ -104,30 +104,12 @@ class Message extends Schema {
         return pullStream(this.streamFromParentIdAndDate(parentId));
     }
 
-    streamFromParentIdAndDate(parentId, options={}) {
-        let {end=Date.now() + ms.days(1), start=Date.now() - ms.days(365)} = options;
-
-        const query = {
-            reverse: true,
-            gte: {
-                date: new Date(start),
-                parentId,
-            },
-            lte: {
-                date: new Date(end + ms.days(1)),
-                parentId,
-            },
-        };
-
-        return this.streamByParent(query);
-    }
-
     streamByThread(inbox, options) {
         return this.streamFromInboxAndDate(inbox, options).pipe(threadStream(this, options));
     }
 
     streamFromInboxAndDate(inbox, options={}) {
-        let {end=Date.now(), start=Date.now() - ms.days(365), keys=true} = options;
+        let {end=Date.now(), start=Date.now() - ms.days(10000), keys=true} = options;
 
         const query = {
             reverse: true,

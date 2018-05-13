@@ -1,4 +1,4 @@
-const Db = require("drawers/adapter/leveldown");
+const Db = require("drawers/adapter/hyper");
 const Path = require("path");
 const cache = new Map();
 const Message = require("./message");

@@ -1,5 +1,5 @@
 {
-  "name": "remit-queue",
+  "name": "@remit-email/remit-queue",
   "version": "0.0.1",
   "description": "Simple queue implementation for remit",
   "main": "index.js",

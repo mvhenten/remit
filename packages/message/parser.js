@@ -91,7 +91,7 @@ async function parseHeaders(email) {
 
         });
 
-        parser.end(email)
+        parser.end(email);
      });
 }
 

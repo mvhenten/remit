@@ -76,6 +76,12 @@ class RemitQueue extends EventEmitter {
         const envelope = new QueueMessageEnvelope(queue, payload);
         let handlers = subscribers.get(name);
 
+        if (!handlers) {
+            console.error("WARNING: no listeners found for: ", name);
+            return;
+        }
+
+
         for (let worker of handlers) {
             await envelope.handle(worker);
 
@@ -129,6 +135,15 @@ class QueueMessageEnvelope {
         await worker(this.payload, this);
     }
 }
+
+let instance = null;
+
+RemitQueue.getInstance = (path, adapter) => {
+    if (!instance)
+        instance = new RemitQueue(path, adapter);
+
+    return instance;
+};
 
 
 module.exports = RemitQueue;

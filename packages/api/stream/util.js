@@ -30,12 +30,12 @@ function mixin(value) {
 
 function limit(limit=50) {
     let count = 0;
-    
+
     return new Transform({
         objectMode: true,
         async transform(chunk, encoding, next) {
             count++;
-            
+
             if (count > limit)
                 this.end();
 
