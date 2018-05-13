@@ -17,7 +17,7 @@ module.exports = (queues) => {
                 return;
             }
 
-            console.error(err);
+            console.trace("Unepected error parsing headers: ", err);
 
             process.exit(1);
         }

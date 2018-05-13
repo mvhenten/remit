@@ -37,7 +37,7 @@ module.exports = (queues) => {
                 queue.resolve();
                 return;
             }
-            console.error("Found error:", err);
+            console.trace("Found error:", err);
 
             process.exit(1);
         }
