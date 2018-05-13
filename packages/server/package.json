@@ -16,10 +16,8 @@
   "dependencies": {
     "@remit-email/api": "^0.0.2",
     "@remit-email/db": "^0.0.2",
-    "@remit-email/index": "^0.0.2",
     "@remit-email/message": "^0.0.2",
     "@remit-email/maildir": "^0.0.2",
-    "@remit-email/mta": "^0.0.2",
     "@remit-email/remit-queue": "^0.0.1",
     "bcrypt": "^1.0.3",
     "config": "^1.26.2",

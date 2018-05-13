@@ -40,8 +40,6 @@ module.exports = (queues, argv) => {
         for (let user of config.users) {
             const maildir = new Maildir(user);
 
-            console.log(user);
-
             if (argv.scan)
                 await scan(maildir);
 

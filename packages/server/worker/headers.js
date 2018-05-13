@@ -6,7 +6,7 @@ const Message = require("@remit-email/message");
 module.exports = (queues) => {
 
     queues.subscribe("headers", async(payload, queue) => {
-        let {user, headers, path, spam} = payload;
+        let { user, headers, path, spam } = payload;
         let message = new Message(user, headers, path);
 
         try {
@@ -21,7 +21,15 @@ module.exports = (queues) => {
                 await message.store();
             }
 
+            path = message.path;
+
             debug("Processed message:", path);
+
+            queues.publish("index", {
+                user,
+                headers,
+                path
+            });
 
             queue.resolve();
         }
