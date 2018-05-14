@@ -5,14 +5,14 @@ const Maildir = require("@remit-email/maildir/maildir");
 
 
 module.exports = (queues, argv) => {
-    const scan = async(Maildir) => {
-        const dirs = await Maildir.folders();
-        const user = Maildir.owner;
+    const scan = async(user) => {
+        const maildir = new Maildir(user);
+        const dirs = await maildir.folders();
 
         for (let dir of dirs) {
             debug("scanning: ", dir);
 
-            let files = await Maildir.list(dir);
+            let files = await maildir.list(dir);
 
             for (let path of files) {
                 debug("found new message");
@@ -21,9 +21,9 @@ module.exports = (queues, argv) => {
         }
     };
 
-    const watch = (Maildir) => {
-        const dir = Maildir.path;
-        const user = Maildir.owner;
+    const watch = (user) => {
+        const maildir = new Maildir(user);
+        const dir = maildir.path;
 
         debug("Watching: ", dir);
 
@@ -38,14 +38,13 @@ module.exports = (queues, argv) => {
 
     const init = async() => {
         for (let user of config.users) {
-            const maildir = new Maildir(user);
 
             if (argv.scan)
-                await scan(maildir);
+                await scan(user);
 
 
             if (argv.watch)
-                watch(maildir);
+                watch(user);
         }
     };
 

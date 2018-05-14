@@ -17,6 +17,12 @@ module.exports = (queues) => {
                 return;
             }
 
+            if (err.code == "ENOENT") {
+                debug(`Message no longer exists, ignoring: ${message.path}`);
+                queue.resolve();
+                return;
+            }
+
             console.trace("Unepected error parsing headers: ", err);
 
             process.exit(1);

@@ -1,31 +1,17 @@
 const {MaildirFolder} = require("./dir");
 
 class Maildir {
-    constructor(user) {
-        this._user = user;
-    }
-
-    get path() {
-        return this._user.maildir;
-    }
-
-    get owner() {
-        return this._user;
-    }
-
-    get filters() {
-        return this._user.filters;
+    constructor({maildir}) {
+        this.maildir = maildir;
     }
 
     async folders() {
-        const maildir = this.path;
-        const folders = new MaildirFolder({maildir});
+        const folders = new MaildirFolder(this);
         return await folders.list();
     }
 
     async list(dir) {
-        const maildir = this.path;
-        const folders = new MaildirFolder({maildir});
+        const folders = new MaildirFolder(this);
 
         return await folders.list(dir);
     }

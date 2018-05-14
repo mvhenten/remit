@@ -37,7 +37,7 @@
     "milliseconds": "^1.0.3",
     "mkdirp": "^0.5.1",
     "nodemailer": "^4.1.0",
-    "rspamd-client": "0.0.2",
+    "rspamd-client": "0.2.0",
     "sanitize-html": "^1.15.0",
     "throat": "^4.1.0",
     "uuid": "^3.1.0",

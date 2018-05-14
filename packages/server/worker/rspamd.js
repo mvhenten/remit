@@ -20,8 +20,10 @@ module.exports = (queues) => {
             queue.resolve();
         }
         catch (err) {
-            if (err.code == "ECONNREFUSED")
+            if (err.code == "ECONNREFUSED") {
                 console.error(`Could not connect to the rspam daemon. Is rspamd running? ${err}`);
+                process.exit(1);
+            }
 
             if (err.code == "EMFILE") {
                 debug(`Too many files open: ${err}`);
@@ -29,13 +31,11 @@ module.exports = (queues) => {
                 return;
             }
 
-            if (err.code == "ECONNRESET") {
-                debug(`Connection reset: ${err}`);
-                queue.reschedule();
-                return;
-            }
-
-            if (err.code == "EPIPE" || err.code == "ETIMEDOUT") {
+            if (err.code == "EPIPE" ||
+                err.code == "ETIMEDOUT" ||
+                err.code == "ENOENT" ||
+                err.code == "ENOTFOUND" ||
+                err.code == "ECONNRESET") {
                 debug(`Failed to send to rspamd: ${err}`);
                 queue.reschedule();
                 return;

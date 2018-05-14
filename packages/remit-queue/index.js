@@ -3,6 +3,7 @@
 const level = require('level-hyper');
 const sublevel = require('level-sublevel/bytewise');
 const Queue = require('level-jobs');
+const debug = require("debug")("remit:queue");
 
 const EventEmitter = require("events").EventEmitter;
 
@@ -21,14 +22,17 @@ class RemitQueue extends EventEmitter {
         State.set(this, {db, queues: new Map(), subscribers: new Map()});
     }
 
-    create(name) {
+    create(name, options) {
         const {db, queues, subscribers} = State.get(this);
 
         if (queues.has(name))
             throw new Error(`Queue ${name} already exists`);
 
         const sub = db.sublevel(name);
-        const queue = Queue(sub, this.handleQueue.bind(this, name));
+
+        db.setMaxListeners(22);
+
+        const queue = Queue(sub, this.handleQueue.bind(this, name), options);
 
         queue.on("error", (err) => {
             this.emit("error", Object.assign(new Error(), {
@@ -77,7 +81,7 @@ class RemitQueue extends EventEmitter {
         let handlers = subscribers.get(name);
 
         if (!handlers) {
-            console.error("WARNING: no listeners found for: ", name);
+            debug("WARNING: no listeners found for: ", name);
             return;
         }
 
