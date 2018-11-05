@@ -3,9 +3,9 @@ const filter = require("@remit-email/message/filter");
 const Message = require("@remit-email/message");
 
 
-module.exports = (queues) => {
+module.exports = (pubsub) => {
 
-    queues.subscribe("headers", async(payload, queue) => {
+    pubsub.subscribe(async(payload, queue) => {
         let { user, headers, path, spam } = payload;
         let message = new Message(user, headers, path);
 
@@ -25,7 +25,7 @@ module.exports = (queues) => {
 
             debug("Processed message:", path);
 
-            queues.publish("index", {
+            pubsub.publish({
                 user,
                 headers,
                 path

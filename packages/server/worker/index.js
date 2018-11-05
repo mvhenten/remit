@@ -2,7 +2,7 @@ const debug = require("debug")("remit:index");
 const Message = require("@remit-email/message");
 
 
-module.exports = (queues, Db) => {
+module.exports = (Db) => {
 
     const index = async (headers, user, path) => {
         const db = Db.load(user);
@@ -26,8 +26,9 @@ module.exports = (queues, Db) => {
         debug("Message indexed: ", message.path);
     };
 
-    queues.subscribe("index", async(payload, queue) => {
+    return async(payload, queue) => {
         let {user, headers, path} = payload;
+        debug("Indexing: ", path);
 
         try {
             await index(headers, user, path);
@@ -38,5 +39,5 @@ module.exports = (queues, Db) => {
 
             process.exit(1);
         }
-    });
+    };
 };

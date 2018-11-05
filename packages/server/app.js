@@ -34,18 +34,12 @@ queues.on("error", (err) => {
 });
 
 const init = async() => {
+    require("./worker/maildir")(queues.pubSub("spam"), argv, config);
+    require("./worker/rspamd")(queues.pubSub("message", "spam"));
+    require("./worker/message")(queues.pubSub("headers", "message"));
+    require("./worker/headers")(queues.pubSub("index", "headers"));
 
-    const spam = queues.create("spam");
-    const message = queues.create("message");
-    const headers = queues.create("headers");
-    const index = queues.create("index");
-
-    require("./worker/maildir")(queues, argv, config);
-    require("./worker/rspamd")(queues);
-    require("./worker/message")(queues);
-    require("./worker/headers")(queues);
-    require("./worker/index")(queues, Db);
+    queues.subscribe("index", require("./worker/index")(Db));
 };
-
 
 init();

@@ -1,13 +1,13 @@
 const debug = require("debug")("remit:headers");
 const { parseHeaders } = require("@remit-email/message/parser");
 
-module.exports = (queues) => {
+module.exports = (pubsub) => {
 
-    queues.subscribe("message", async(message, queue) => {
+    pubsub.subscribe(async(message, queue) => {
         try {
             message.headers = await parseHeaders(message.path);
             debug("Parsed headers: ", message.path);
-            queues.publish("headers", message);
+            pubsub.publish(message);
             queue.resolve();
         }
         catch (err) {

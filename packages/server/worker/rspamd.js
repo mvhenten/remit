@@ -1,18 +1,29 @@
 const debug = require("debug")("remit:rspamd");
 const Rspamd = require("rspamd-client");
+const Path = require("path");
 const client = Rspamd();
 
 
-module.exports = (queues) => {
+module.exports = (pubsub) => {
+    const check = async (path) => {
+        const dirname = Path.dirname(path);
 
-    queues.subscribe("spam", async({ user, path }, queue) => {
+        if (!/[.]spam$/.test(dirname))
+            return { isSpam: true };
+
+        if (!/\/new$/.test(dirname))
+            return { isSpam: false };
+
+        return client.check(path);
+    };
+
+    pubsub.subscribe(async({ user, path }, queue) => {
+
         try {
-            debug("checking");
-            const result = await client.check(path);
-
             debug("publishing message");
+            const result = await check(path);
 
-            queues.publish("message", {
+            pubsub.publish({
                 user,
                 path,
                 spam: result.isSpam

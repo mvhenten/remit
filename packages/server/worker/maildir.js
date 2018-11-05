@@ -2,7 +2,7 @@ const debug = require("debug")("remit:mta");
 const fs = require("graceful-fs");
 const Maildir = require("@remit-email/maildir/maildir");
 
-module.exports = (queues, argv, config) => {
+module.exports = (pubsub, argv, config) => {
     const scan = async(user) => {
         const maildir = new Maildir(user);
         const dirs = await maildir.folders();
@@ -14,7 +14,7 @@ module.exports = (queues, argv, config) => {
 
             for (let path of files) {
                 debug("found new message");
-                queues.publish("spam", { path, user });
+                pubsub.publish({ path, user });
             }
         }
     };
@@ -31,7 +31,7 @@ module.exports = (queues, argv, config) => {
                 return;
 
             debug("found new message");
-            queues.publish("spam", { path, user });
+            pubsub.publish("spam", { path, user });
         });
     };
 

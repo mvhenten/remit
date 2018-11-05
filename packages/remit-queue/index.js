@@ -66,6 +66,10 @@ class RemitQueue extends EventEmitter {
         queues.get(name).push(payload);
     }
 
+    pubSub(pubName, subName) {
+        return new RemitPubSub(this, pubName, subName);
+    }
+
     addSubscriber(name, worker) {
         const { subscribers } = State.get(this);
         const handlers = subscribers.get(name) || new Set();
@@ -139,6 +143,22 @@ class QueueMessageEnvelope {
     async handle(worker) {
         this.lock = true;
         await worker(this.payload, this);
+    }
+}
+
+class RemitPubSub {
+    constructor(queues, pubName, subName) {
+        State.set(this, {queues, pubName, subName});
+    }
+
+    subscribe(handler) {
+        const {queues, subName} = State.get(this);
+        queues.subscribe(subName, handler);
+    }
+
+    publish(payload) {
+        const {queues, pubName} = State.get(this);
+        queues.publish(pubName, payload);
     }
 }
 

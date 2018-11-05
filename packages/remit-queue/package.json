@@ -11,7 +11,9 @@
   "dependencies": {
     "level-hyper": "^1.2.2",
     "level-jobs": "^2.1.0",
-    "level-sublevel": "^6.6.1"
+    "level-party": "^3.0.4",
+    "level-sublevel": "^6.6.1",
+    "multilevel": "^7.2.3"
   },
   "devDependencies": {
     "memdown": "^2.0.0",
