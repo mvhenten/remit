@@ -1,10 +1,8 @@
 const debug = require("debug")("remit:mta");
 const fs = require("graceful-fs");
-const config = require("config");
 const Maildir = require("@remit-email/maildir/maildir");
 
-
-module.exports = (queues, argv) => {
+module.exports = (queues, argv, config) => {
     const scan = async(user) => {
         const maildir = new Maildir(user);
         const dirs = await maildir.folders();
@@ -22,8 +20,9 @@ module.exports = (queues, argv) => {
     };
 
     const watch = (user) => {
+        console.log(user);
         const maildir = new Maildir(user);
-        const dir = maildir.path;
+        const dir = maildir.maildir;
 
         debug("Watching: ", dir);
 
@@ -39,12 +38,13 @@ module.exports = (queues, argv) => {
     const init = async() => {
         for (let user of config.users) {
 
+            if (argv.watch)
+                watch(user);
+
             if (argv.scan)
                 await scan(user);
 
 
-            if (argv.watch)
-                watch(user);
         }
     };
 

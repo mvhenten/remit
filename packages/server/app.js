@@ -1,18 +1,27 @@
-const argv = require('yargs').argv;
+const config = require('rc')("remit", {
+    users: []
+});
+
 const Queue = require("@remit-email/remit-queue");
 const queues = new Queue();
+const Db = require("@remit-email/db/db")(config);
+const yargs = require("yargs");
 
-const Db = require("@remit-email/db/db");
 
-require("@remit-email/api/routes");
 
+const argv = yargs
+    .describe("scan", "re-index")
+    .default("scan", false)
+    .option("watch")
+    .describe("watch", "re-index")
+    .default("watch", true)
+    .alias('h', 'help')
+    .help('help')
+    .usage('Usage: $0 -x [num]')
+    .showHelpOnFail(false, "Specify --help for available options")
+    .argv;
 
 require('events').EventEmitter.defaultMaxListeners = 25;
-
-const queueOptions = {
-    maxConcurrency: Infinity
-};
-
 
 process.on("unhandledRejection", (err) => {
     console.error(err);
@@ -24,19 +33,19 @@ queues.on("error", (err) => {
     process.exit(1);
 });
 
-const init = async () => {
+const init = async() => {
 
-    queues.create("spam");
-    queues.create("message");
-    queues.create("headers");
-    queues.create("index");
+    const spam = queues.create("spam");
+    const message = queues.create("message");
+    const headers = queues.create("headers");
+    const index = queues.create("index");
 
-    require("./worker/maildir")(queues, argv);
+    require("./worker/maildir")(queues, argv, config);
     require("./worker/rspamd")(queues);
     require("./worker/message")(queues);
     require("./worker/headers")(queues);
     require("./worker/index")(queues, Db);
-
 };
+
 
 init();

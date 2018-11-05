@@ -7,6 +7,7 @@ module.exports = (queues) => {
 
     queues.subscribe("spam", async({ user, path }, queue) => {
         try {
+            debug("checking");
             const result = await client.check(path);
 
             debug("publishing message");

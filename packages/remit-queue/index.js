@@ -7,23 +7,25 @@ const debug = require("debug")("remit:queue");
 
 const EventEmitter = require("events").EventEmitter;
 
-const DEFAULT_PATH="/tmp/remit-queue";
+const DEFAULT_PATH = "/tmp/remit-queue";
 const State = new WeakMap();
 
 const hyperAdapater = (path) => {
     return sublevel(level(path), { valueEncoding: "json" });
 };
 
+const DEFAULT_MAX_CONCURRENCY = 3;
+
 class RemitQueue extends EventEmitter {
-    constructor(path=DEFAULT_PATH, adapter) {
+    constructor(path = DEFAULT_PATH, adapter) {
         super();
 
         const db = (adapter || hyperAdapater)(path);
-        State.set(this, {db, queues: new Map(), subscribers: new Map()});
+        State.set(this, { db, queues: new Map(), subscribers: new Map() });
     }
 
-    create(name, options) {
-        const {db, queues, subscribers} = State.get(this);
+    create(name, maxConcurrency=DEFAULT_MAX_CONCURRENCY) {
+        const { db, queues, subscribers } = State.get(this);
 
         if (queues.has(name))
             throw new Error(`Queue ${name} already exists`);
@@ -32,7 +34,7 @@ class RemitQueue extends EventEmitter {
 
         db.setMaxListeners(22);
 
-        const queue = Queue(sub, this.handleQueue.bind(this, name), options);
+        const queue = Queue(sub, this.handleQueue.bind(this, name), maxConcurrency);
 
         queue.on("error", (err) => {
             this.emit("error", Object.assign(new Error(), {
@@ -43,11 +45,11 @@ class RemitQueue extends EventEmitter {
 
         queues.set(name, queue);
 
-        State.set(this, {db, queues, subscribers});
+        State.set(this, { db, queues, subscribers });
     }
 
     subscribe(name, worker) {
-        const {queues} = State.get(this);
+        const { queues } = State.get(this);
 
         if (!queues.has(name))
             this.create(name);
@@ -56,7 +58,7 @@ class RemitQueue extends EventEmitter {
     }
 
     publish(name, payload) {
-        const {queues} = State.get(this);
+        const { queues } = State.get(this);
 
         if (!queues.has(name))
             this.create(name);
@@ -65,7 +67,7 @@ class RemitQueue extends EventEmitter {
     }
 
     addSubscriber(name, worker) {
-        const {subscribers} = State.get(this);
+        const { subscribers } = State.get(this);
         const handlers = subscribers.get(name) || new Set();
 
         handlers.add(worker);
@@ -73,7 +75,7 @@ class RemitQueue extends EventEmitter {
     }
 
     async handleQueue(name, id, payload, done) {
-        const {subscribers, queues} = State.get(this);
+        const { subscribers, queues } = State.get(this);
 
         const queue = queues.get(name);
 
@@ -102,7 +104,7 @@ class RemitQueue extends EventEmitter {
 
 class QueueMessageEnvelope {
     constructor(queue, payload) {
-        Object.assign(this, {queue, payload, lock: false, done: false });
+        Object.assign(this, { queue, payload, lock: false, done: false });
     }
 
     /**
@@ -139,15 +141,5 @@ class QueueMessageEnvelope {
         await worker(this.payload, this);
     }
 }
-
-let instance = null;
-
-RemitQueue.getInstance = (path, adapter) => {
-    if (!instance)
-        instance = new RemitQueue(path, adapter);
-
-    return instance;
-};
-
 
 module.exports = RemitQueue;
