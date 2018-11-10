@@ -1,19 +1,16 @@
 const EventEmitter = require("events");
 const MailComposer = require("nodemailer/lib/mail-composer");
-const { parseHeaders, parseMessage } = require("./parser");
-const Filter = require("./filter");
+const { parseMessage } = require("./parser");
 const Flags = require("maildir-flags");
 const Path = require("path");
 const { promisify } = require('util');
 const fs = require("graceful-fs");
-const uuid = require("uuid");
 
 const debug = require("debug")("remit:mta:message");
 
 const rename = promisify(fs.rename);
 const unlink = promisify(fs.unlink);
 const mkdirp = promisify(require("mkdirp"));
-const writeFile = promisify(fs.writeFile);
 
 const State = new WeakMap();
 
@@ -21,22 +18,17 @@ State.update = (key, values) => {
     State.set(key, Object.assign(State.get(key), values));
 };
 
-function compose(options) {
-    return new Promise((resolve, reject) => {
-        new MailComposer(options).compile().build(function(err, msg) {
-            if (err) return reject(err);
-            resolve(msg);
-        });
-    });
-}
-
 class MaildirMessage extends EventEmitter {
     constructor(user, headers, path) {
         super();
 
         let { flags } = Flags.parse(path);
 
-        State.set(this, { user, headers, path, path, flags });
+        State.set(this, { user, headers, path, flags });
+    }
+
+    get headers() {
+        State.get(this).headers;
     }
 
     // static async compose(user, { messageId = uuid(), references, text, subject, from, to, bcc }) {
