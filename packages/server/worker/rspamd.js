@@ -5,28 +5,36 @@ const client = Rspamd();
 
 
 module.exports = (pubsub) => {
-    const check = async (path) => {
+    const check = async(path) => {
         const dirname = Path.dirname(path);
 
-        if (!/[.]spam$/.test(dirname))
-            return { isSpam: true };
+        if (/[.]spam$/.test(dirname))
+            return true;
 
         if (!/\/new$/.test(dirname))
-            return { isSpam: false };
+            return false;
 
-        return client.check(path);
+        const result = await client.check(path);
+
+        debug("checked %s: ", path, JSON.stringify(result));
+
+        return result.isSpam;
     };
 
     pubsub.subscribe(async({ user, path }, queue) => {
+        if (!path) {
+            queue.resolve();
+            return console.error("invalid path");
+        }
 
         try {
-            debug("publishing message");
-            const result = await check(path);
+            const spam = await check(path);
 
+            debug("publishing message", path, spam);
             pubsub.publish({
                 user,
                 path,
-                spam: result.isSpam
+                spam,
             });
 
             queue.resolve();
@@ -43,10 +51,16 @@ module.exports = (pubsub) => {
                 return;
             }
 
+            if (err.code == "ENOENT" ||
+                err.code == "ENOTFOUND") {
+                debug(`Message deleted: ${err}`);
+                queue.resolve();
+                return;
+
+            }
+
             if (err.code == "EPIPE" ||
                 err.code == "ETIMEDOUT" ||
-                err.code == "ENOENT" ||
-                err.code == "ENOTFOUND" ||
                 err.code == "ECONNRESET") {
                 debug(`Failed to send to rspamd: ${err}`);
                 queue.reschedule();

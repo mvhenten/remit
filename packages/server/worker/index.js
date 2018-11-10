@@ -3,7 +3,6 @@ const Message = require("@remit-email/message");
 
 
 module.exports = (Db) => {
-
     const index = async (headers, user, path) => {
         const db = Db.load(user);
         let message = new Message(user, headers, path);
@@ -32,6 +31,7 @@ module.exports = (Db) => {
 
         try {
             await index(headers, user, path);
+            debug("Index written");
             queue.resolve();
         }
         catch (err) {

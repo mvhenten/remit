@@ -1,4 +1,4 @@
-const debug = require("debug")("remit:headers");
+const debug = require("debug")("remit:delivery");
 const filter = require("@remit-email/message/filter");
 const Message = require("@remit-email/message");
 
@@ -10,16 +10,22 @@ module.exports = (pubsub) => {
         let message = new Message(user, headers, path);
 
         try {
-            if (spam) {
+            let match = filter.match(user.filters, {headers});
+
+            debug("Matching: ", path, match);
+
+            /**
+             * Our filters presumably act as a whitelist
+             *
+             * TODO we need better logic for whitelists
+             * and spam handling.
+             */
+            if (match) message.inbox = match.target;
+            else if (spam) {
                 message.spam = true;
                 message.inbox = "spam";
-                await message.store();
             }
-            else {
-                let match = filter.match(user.filters, this);
-                if (match) message.inbox = match.target;
-                await message.store();
-            }
+            await message.store();
 
             path = message.path;
 
