@@ -1,15 +1,10 @@
-const config = require('rc')("remit", {
-    users: []
-});
-
+const debug = require("debug")("remit:app");
 const Queue = require("@remit-email/remit-queue");
-const queues = new Queue();
-const Db = require("@remit-email/db/db")(config);
+const RemitDB = require("@remit-email/db/db");
 const yargs = require("yargs");
 
-
-
 const argv = yargs
+    .describe("message", "process a single message")
     .describe("scan", "re-index")
     .default("scan", false)
     .option("watch")
@@ -21,25 +16,40 @@ const argv = yargs
     .showHelpOnFail(false, "Specify --help for available options")
     .argv;
 
-require('events').EventEmitter.defaultMaxListeners = 25;
-
 process.on("unhandledRejection", (err) => {
     console.error(err);
     process.exit(1);
 });
 
-queues.on("error", (err) => {
-    console.error("Encountered unexpected error handling queued item: ", err);
-    process.exit(1);
+const config = require('rc')("remit", {
+    users: []
 });
 
 const init = async() => {
+    const queues = new Queue();
+    const db = new RemitDB(config);
+
+    queues.on("error", (err) => {
+        console.error("Encountered unexpected error handling queued item: ", err);
+        process.exit(1);
+    });
+
+    console.log(config.users[0].filters);
+
+
+    if (argv.scan) {
+        debug("Destroying database");
+        await db.destroy();
+        debug("Destroying queues");
+        await queues.destroy();
+    }
+
     require("./worker/maildir")(queues.pubSub("spam"), argv, config);
     require("./worker/rspamd")(queues.pubSub("message", "spam"));
-    require("./worker/message")(queues.pubSub("headers", "message"));
-    require("./worker/headers")(queues.pubSub("index", "headers"));
+    require("./worker/message")(queues.pubSub("delivery", "message"));
+    require("./worker/delivery")(queues.pubSub("index", "delivery"));
 
-    queues.subscribe("index", require("./worker/index")(Db));
+    queues.subscribe("index", require("./worker/index")(db));
 };
 
 init();
