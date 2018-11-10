@@ -11,28 +11,54 @@ const DEFAULT_PATH = "/tmp/remit-queue";
 const State = new WeakMap();
 
 const hyperAdapater = (path) => {
-    return sublevel(level(path), { valueEncoding: "json" });
+    const db = level(path);
+    const subleveldb = sublevel(db, { valueEncoding: "json" });
+
+    subleveldb.destroy = async() => new Promise((resolve, reject) => {
+        db.close(() => {
+            db.options.db.destroy(path, err => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+    });
+
+    return subleveldb;
 };
 
-const DEFAULT_MAX_CONCURRENCY = 3;
+const DEFAULT_MAX_CONCURRENCY = 9;
 
 class RemitQueue extends EventEmitter {
     constructor(path = DEFAULT_PATH, adapter) {
         super();
-
-        const db = (adapter || hyperAdapater)(path);
-        State.set(this, { db, queues: new Map(), subscribers: new Map() });
+        State.set(this, { adapter, path, queues: new Map(), subscribers: new Map() });
     }
 
-    create(name, maxConcurrency=DEFAULT_MAX_CONCURRENCY) {
-        const { db, queues, subscribers } = State.get(this);
+    get db() {
+        const state = State.get(this);
+        let { adapter, path } = state;
+
+        if (!state.db) {
+            state.db = (adapter || hyperAdapater)(path);
+            State.set(this, state);
+        }
+
+        return state.db;
+    }
+
+    async destroy() {
+        await this.db.destroy();
+        State.get(this).db = null;
+    }
+
+    create(name, maxConcurrency = DEFAULT_MAX_CONCURRENCY) {
+        const { queues } = State.get(this);
 
         if (queues.has(name))
             throw new Error(`Queue ${name} already exists`);
 
-        const sub = db.sublevel(name);
-
-        db.setMaxListeners(22);
+        const sub = this.db.sublevel(name);
+        this.db.setMaxListeners(22);
 
         const queue = Queue(sub, this.handleQueue.bind(this, name), maxConcurrency);
 
@@ -44,8 +70,6 @@ class RemitQueue extends EventEmitter {
         });
 
         queues.set(name, queue);
-
-        State.set(this, { db, queues, subscribers });
     }
 
     subscribe(name, worker) {
@@ -148,16 +172,16 @@ class QueueMessageEnvelope {
 
 class RemitPubSub {
     constructor(queues, pubName, subName) {
-        State.set(this, {queues, pubName, subName});
+        State.set(this, { queues, pubName, subName });
     }
 
     subscribe(handler) {
-        const {queues, subName} = State.get(this);
+        const { queues, subName } = State.get(this);
         queues.subscribe(subName, handler);
     }
 
     publish(payload) {
-        const {queues, pubName} = State.get(this);
+        const { queues, pubName } = State.get(this);
         queues.publish(pubName, payload);
     }
 }
