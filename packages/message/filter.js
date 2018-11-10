@@ -10,6 +10,7 @@ function matchCheck(value, check) {
 }
 
 function matchValue(value, check) {
+    console.log("value, check", value, check);
     if (!value) return false;
 
     if (check.value)
@@ -41,11 +42,11 @@ function matchFilter({filter}, headers) {
 }
 
 
-module.exports.match = function match(filters, headers) {
+module.exports.match = function match(filters, message) {
     let normalized = filters.map(({ filter, target }) => ({
         filter: parse(filter),
         target
     }));
 
-    return normalized.find(filter => matchFilter(filter, headers));
+    return normalized.find(filter => matchFilter(filter, message.headers));
 };

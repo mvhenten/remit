@@ -13,11 +13,7 @@ test("it should return the filter matching", assert => {
         target: "important"
     };
 
-    const user = {
-        filters: [filter]
-    };
-
-    const match = Filters.match(user, message);
+    const match = Filters.match([filter], message);
 
     assert.deepEqual(match, {
         filter: [{ key: "to", value: headers.to }],
@@ -26,6 +22,7 @@ test("it should return the filter matching", assert => {
 
     assert.end();
 });
+
 
 test("it should return partial match", assert => {
     const headers = {
@@ -39,11 +36,7 @@ test("it should return partial match", assert => {
         target: "important"
     };
 
-    const user = {
-        filters: [filter]
-    };
-
-    const match = Filters.match(user, message);
+    const match = Filters.match([filter], message);
 
     assert.deepEqual(match, {
         filter: [{ key: "to", value: "someone" }],
@@ -65,13 +58,12 @@ test("it should return first filter matching", assert => {
         target: "important"
     };
 
-    const user = {
-        filters: [{
+    const  filters = [{
             filter: "from:" + headers.from
-        }, filter]
-    };
+        }, filter];
 
-    const match = Filters.match(user, message);
+
+    const match = Filters.match(filters, message);
 
     assert.deepEqual(match, {
         filter: [{ key: "to", value: headers.to }],
@@ -93,11 +85,7 @@ test("it should match text", assert => {
         target: "important"
     };
 
-    const user = {
-        filters: [filter]
-    };
-
-    const match = Filters.match(user, message);
+    const match = Filters.match([filter], message);
 
     assert.deepEqual(match, {
         filter: [{ key: "match", accept: "someone" }],
@@ -119,11 +107,7 @@ test("reject text", assert => {
         target: "important"
     };
 
-    const user = {
-        filters: [filter]
-    };
-
-    const match = Filters.match(user, message);
+    const match = Filters.match([filter], message);
 
     assert.ok(!match, "no match found");
     assert.end();
@@ -141,11 +125,7 @@ test("reject text with matching", assert => {
         target: "important"
     };
 
-    const user = {
-        filters: [filter]
-    };
-
-    const match = Filters.match(user, message);
+    const match = Filters.match([filter], message);
 
     assert.ok(!match, "no match found");
     assert.end();
