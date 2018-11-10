@@ -12,8 +12,12 @@ class Maildir {
 
     async list(dir) {
         const folders = new MaildirFolder(this);
-
         return await folders.list(dir);
+    }
+
+    async counts() {
+        const folders = new MaildirFolder(this);
+        return await folders.counts();
     }
 }
 
