@@ -57,8 +57,8 @@ const secret = config.auth.secret;
 app.use(jwt({ secret, passthrough: true }));
 
 
-router.post("/api/auth", bodyParser({ multipart: true }), async(ctx) => {
-    const { username, password } = ctx.request.body.fields;
+router.post("/api/auth", bodyParser(), async(ctx) => {
+    const { username, password } = ctx.request.body;
     const user = config.users.find(user => user.name == username);
 
     if (!(username && password && user))
@@ -98,6 +98,7 @@ router.use(async(ctx, next) => {
 
 router.get("/api/maildir", async ctx => {
     const maildir = await counts(ctx.user);
+    console.log(maildir);
     ctx.body = { maildir };
 });
 

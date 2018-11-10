@@ -21,11 +21,15 @@ router.get("/api/threads/:id", async ctx => {
 
     if (!folder) return NotFound(ctx);
 
-    ctx.body = ctx.db.Message.streamFromInboxAndDate(".silke")
-        .pipe(build("messages"))
-        .pipe(mixin({ folder }))
-        .pipe(limit(50))
-        .pipe(streamJSON());
+    ctx.body = ctx.db.Message.streamFromInboxAndDate(folder.id)
+        // .pipe(build("messages"))
+        // .pipe(mixin({ folder }))
+        // .pipe(limit(50))
+        .transform(chunk => ({message: chunk.value}))
+        .limit(10)
+        // .tranform(chunk => ({message: chunk.value}))
+        .toJSONStream()
+        // .pipe(streamJSON());
 });
 
 function mixinMessage(user) {
