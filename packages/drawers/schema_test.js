@@ -354,6 +354,30 @@ test("it can limit results", async assert => {
     });
 });
 
+test("it can transform results", async assert => {
+    let db = testDb();
+    let person = new Person(db);
+    const collect = collectStream();
+
+    const N_TO_CREATE = 10;
+
+    const [batch, rawValues] = await createPersonsBatch(person, N_TO_CREATE);
+    await db.batch(batch);
+
+    person.streamByAge({ reverse: true })
+        .transform(chunk => chunk.value)
+        .pipe(collect);
+
+    collect.on("finish", () => {
+        let values = collect.values;
+        let expected = rawValues.map(value => value.id);
+
+        assert.deepEqual(values, expected.reverse());
+        assert.end();
+    });
+});
+
+
 test("it can apply a transform", async assert => {
     function loadCarStream(self) {
         return new Transform({
