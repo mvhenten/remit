@@ -114,14 +114,17 @@ class Message extends Schema {
         const query = {
             reverse: true,
             keys,
-            gte: {
-                date: new Date(start),
-                inbox,
-            },
-            lte: {
-                date: new Date(end),
-                inbox: inbox,
-            },
+            start: {
+                inbox
+            }
+            // gte: {
+            //     date: new Date(start),
+            //     inbox,
+            // },
+            // lte: {
+            //     date: new Date(end),
+            //     inbox: inbox,
+            // },
         };
 
         return this.streamByDateAndInbox(query);

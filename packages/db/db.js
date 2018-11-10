@@ -1,23 +1,42 @@
 const db = require("drawers/adapter/hyper");
 const Path = require("path");
-const cache = new Map();
 const Message = require("./message");
 
-module.exports = (config) => {
+const State = new WeakMap();
 
-    function load(user) {
-        if (!cache.has(user.name)) {
+class RemitDB {
+    constructor(config) {
+        const stores = new Map();
+
+        State.set(this, {
+            config,
+            stores
+        });
+    }
+
+    load(user) {
+        const {config, stores} = State.get(this);
+
+        if (!stores.has(user.name)) {
             const path = Path.resolve(Path.join(config.db.path, user.name));
             const store = db(path);
 
             store.Message = new Message(store);
 
-            cache.set(user.name, store);
+            stores.set(user.name, store);
         }
 
-        return cache.get(user.name);
+        return stores.get(user.name);
     }
 
+    async destroy() {
+        const {config, stores} = State.get(this);
 
-    return {load};
-};
+        for (let user of config.users) {
+            await this.load(user).destroy();
+            stores.delete(user.name);
+        }
+    }
+}
+
+module.exports = RemitDB;
