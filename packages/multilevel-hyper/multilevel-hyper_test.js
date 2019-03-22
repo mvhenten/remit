@@ -21,6 +21,8 @@ test("it can open two databases", async assert => {
     assert.equal(resa, value);
     assert.equal(resb, value);
 
+    a.close();
+
     await server.close();
     assert.end();
 });
@@ -53,7 +55,6 @@ test("server can destroy", async assert => {
     assert.end();
 });
 
-
 test("keys are stored in range", async assert => {
     const dir = path.join(os.tmpdir(), Math.random().toString(36));
     const server = level(dir).listen();
@@ -79,7 +80,11 @@ test("keys are stored in range", async assert => {
         results.push(key.toString());
     });
 
+    stream.on("error", () => console.log("err", arguments));
+
     stream.on("end", () => {
+        stream.destroy();
+        // stream.end();
         assert.deepEqual(keys.sort(), results);
         server.close();
         assert.end();
