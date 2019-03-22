@@ -19,11 +19,11 @@ class HeaderStream extends Readable {
     }
 
     async _read() {
-        const filename = this._files.pop();
-        if (!filename) return this.push(null);
+        const path = this._files.pop();
+        if (!path) return this.push(null);
 
-        const headers = await parseHeaders(filename);
-        this.push(headers);
+        const headers = await parseHeaders(path);
+        this.push({path, ...headers});
     }
 }
 

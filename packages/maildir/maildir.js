@@ -1,5 +1,7 @@
 const {MaildirFolder} = require("./dir");
 const HeaderStream = require("./header-stream");
+const {EventEmitter} = require("events");
+const fs = require("fs");
 
 class Maildir {
     constructor({maildir}) {
@@ -37,7 +39,21 @@ class Maildir {
         let files = await this.files();
 
         return new HeaderStream(files);
-    };
+    }
+
+    async watch() {
+        const {maildir} = this;
+        const emitter = new EventEmitter();
+
+        fs.watch(maildir, (eventType, path) => {
+            emitter.emit(eventType, {
+                maildir: this,
+                path,
+            });
+        });
+
+        return emitter;
+    }
 
 }
 
