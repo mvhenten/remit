@@ -1,0 +1,24 @@
+{
+  "name": "@remit-email/index",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "@remit-email/maildir": "^0.0.2",
+    "graceful-fs": "^4.1.15",
+    "maildir-flags": "0.0.1",
+    "mailparser": "^2.5.0",
+    "ora": "^3.2.0",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "@remit-email/message": "*",
+    "@remit-email/maildir": "*",
+    "@remit-email/db": "*"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
