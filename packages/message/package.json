@@ -10,6 +10,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@remit-email/maildir": "^0.0.2",
     "dev-null": "^0.1.1",
     "email-filter": "0.0.1",
     "graceful-fs": "^4.1.11",
