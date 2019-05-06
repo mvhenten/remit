@@ -27,6 +27,7 @@
     "tape": "^4.8.0"
   },
   "dependencies": {
+    "@remit-email/maildir": "^0.0.2",
     "date-fns": "^1.29.0",
     "fetch-readablestream": "^0.1.0",
     "kabinet": "^0.3.0",
